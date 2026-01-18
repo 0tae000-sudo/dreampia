@@ -3,9 +3,18 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   console.log(request);
-  return Response.json({
-    ok: true,
-  });
+  return NextResponse.json(
+    {
+      ok: true,
+    },
+    {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
+    }
+  );
 }
 
 export async function POST(request: NextRequest) {

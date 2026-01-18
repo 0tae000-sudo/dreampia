@@ -6,13 +6,10 @@ import Link from "next/link";
 
 export default function Login() {
   const onClick = async () => {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/www/users`,
-      {
-        method: "POST",
-        body: JSON.stringify({ email: "test@test.com", password: "1234" }),
-      }
-    );
+    const response = await fetch(`https://dreampia.vercel.app/www/users`, {
+      method: "GET",
+      // body: JSON.stringify({ email: "test@test.com", password: "1234" }),
+    });
     const data = await response.json();
     console.log(data);
   };
@@ -45,6 +42,7 @@ export default function Login() {
           </div>
           <form className="mt-6 max-w-md mx-auto space-y-4">
             <FormInput
+              autoComplete="email"
               type="email"
               placeholder="이메일주소(아이디)"
               required={true}
@@ -52,6 +50,7 @@ export default function Login() {
             />
             <FormInput
               type="password"
+              autoComplete="current-password"
               placeholder="비밀번호"
               required={true}
               errors={[]}

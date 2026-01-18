@@ -10,7 +10,8 @@ export default function FormInput({
   placeholder,
   required,
   errors,
-}: FormInputProps) {
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement> & FormInputProps) {
   return (
     <div className="flex flex-col gap-2">
       <input
@@ -18,6 +19,7 @@ export default function FormInput({
         type={type}
         placeholder={placeholder}
         required={required}
+        {...props}
       />
       {errors.map((error, index) => (
         <span key={index} className="text-red-500 font-medium">
