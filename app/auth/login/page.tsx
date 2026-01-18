@@ -7,8 +7,8 @@ import Link from "next/link";
 export default function Login() {
   const onClick = async () => {
     const response = await fetch(`https://dreampia.vercel.app/www/users/`, {
-      method: "GET",
-      // body: JSON.stringify({ email: "test@test.com", password: "1234" }),
+      method: "POST",
+      body: JSON.stringify({ email: "test@test.com", password: "1234" }),
     });
     const data = await response.json();
     console.log(data);

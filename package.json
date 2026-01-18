@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build:web": "next build",
+    "build:app": "NEXT_PUBLIC_IS_APP=true next build",
     "start": "next start",
     "lint": "eslint"
   },
