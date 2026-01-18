@@ -6,10 +6,13 @@ import Link from "next/link";
 
 export default function Login() {
   const onClick = async () => {
-    const response = await fetch("/www/users", {
-      method: "POST",
-      body: JSON.stringify({ email: "test@test.com", password: "1234" }),
-    });
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/www/users`,
+      {
+        method: "POST",
+        body: JSON.stringify({ email: "test@test.com", password: "1234" }),
+      }
+    );
     const data = await response.json();
     console.log(data);
   };
