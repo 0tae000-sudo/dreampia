@@ -10,6 +10,11 @@ const config: CapacitorConfig = {
     // 2. 안드로이드 에뮬레이터는 10.0.2.2 주소를 통해 PC에 접속합니다.
     url: "http://172.30.1.27:3000",
     cleartext: true,
+    allowNavigation: [
+      "*.daum.net",
+      "*.postcode.map.daum.net",
+      "t1.daumcdn.net",
+    ],
   },
 };
 

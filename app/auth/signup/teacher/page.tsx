@@ -1,91 +1,37 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import FormButton from "@/components/form-btn";
 import FormInput from "@/components/fom-input";
-
-declare global {
-  interface Window {
-    daum?: {
-      Postcode: new (options: {
-        oncomplete: (data: {
-          zonecode: string;
-          roadAddress?: string;
-          address?: string;
-        }) => void;
-      }) => { open: () => void };
-    };
-  }
-}
+import DaumPostcodeEmbed from "react-daum-postcode";
 
 const POSTCODE_SCRIPT_ID = "daum-postcode-script";
 
 export default function TeacherSignup() {
+  const [isAddressSearchOpen, setIsAddressSearchOpen] = useState(false);
   const [postcode, setPostcode] = useState("");
   const [address, setAddress] = useState("");
   const [domain, setDomain] = useState("");
-  const scriptLoadedRef = useRef(false);
   const domainOptions = ["gmail.com", "naver.com", "daum.net"];
   const selectedDomain = domainOptions.includes(domain) ? domain : "";
 
-  const loadPostcodeScript = useCallback(() => {
-    if (scriptLoadedRef.current) {
-      return Promise.resolve();
+  const handleComplete = (data: any) => {
+    let fullAddress = data.address;
+    let extraAddress = "";
+
+    if (data.addressType === "R") {
+      if (data.bname !== "") extraAddress += data.bname;
+      if (data.buildingName !== "")
+        extraAddress +=
+          extraAddress !== "" ? `, ${data.buildingName}` : data.buildingName;
+      fullAddress += extraAddress !== "" ? ` (${extraAddress})` : "";
     }
 
-    return new Promise<void>((resolve, reject) => {
-      const existing = document.getElementById(
-        POSTCODE_SCRIPT_ID
-      ) as HTMLScriptElement | null;
-      if (existing) {
-        existing.addEventListener("load", () => {
-          scriptLoadedRef.current = true;
-          resolve();
-        });
-        existing.addEventListener("error", () =>
-          reject(new Error("postcode script load failed"))
-        );
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.id = POSTCODE_SCRIPT_ID;
-      script.src =
-        "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
-      script.async = true;
-      script.onload = () => {
-        scriptLoadedRef.current = true;
-        resolve();
-      };
-      script.onerror = () => reject(new Error("postcode script load failed"));
-      document.body.appendChild(script);
-    });
-  }, []);
-
-  const handlePostcodeSearch = useCallback(async () => {
-    try {
-      await loadPostcodeScript();
-      if (!window.daum?.Postcode) {
-        throw new Error("postcode script not available");
-      }
-
-      new window.daum.Postcode({
-        oncomplete: (data) => {
-          setPostcode(data.zonecode);
-          setAddress(data.roadAddress || data.address || "");
-        },
-      }).open();
-    } catch (error) {
-      console.error(error);
-    }
-  }, [loadPostcodeScript]);
-
-  useEffect(() => {
-    loadPostcodeScript().catch(() => {
-      // Script load will be retried when user clicks the button.
-    });
-  }, [loadPostcodeScript]);
+    setAddress(fullAddress);
+    setPostcode(data.zonecode);
+    setIsAddressSearchOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-[#f6f6f6] text-gray-900">
@@ -165,12 +111,32 @@ export default function TeacherSignup() {
                     className="cursor-pointer bg-orange-600 text-amber-50 rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
                     type="button"
                     disabled={false}
-                    onClick={handlePostcodeSearch}
+                    onClick={() => setIsAddressSearchOpen(true)}
                   >
                     우편번호 검색
                   </button>
                 </div>
               </div>
+              {/* 주소 검색 모달 */}
+              {isAddressSearchOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                  <div className="bg-white w-full max-w-lg rounded-lg overflow-hidden relative">
+                    <div className="p-4 border-b flex justify-between items-center">
+                      <h2 className="font-bold">주소 검색</h2>
+                      <button
+                        onClick={() => setIsAddressSearchOpen(false)}
+                        className="text-xl"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                    <DaumPostcodeEmbed
+                      onComplete={handleComplete}
+                      style={{ height: "450px" }}
+                    />
+                  </div>
+                </div>
+              )}
               <div className="mt-2">
                 <FormInput
                   type="text"
