@@ -72,7 +72,12 @@ export default function TeacherSignup() {
                   />
                 </div>
                 <div className="w-full sm:w-32">
-                  <FormButton loading={false} text="우편번호검색" />
+                  <FormButton
+                    type="button"
+                    loading={false}
+                    disabled={false}
+                    text="우편번호검색"
+                  />
                 </div>
               </div>
               <div className="mt-2">
@@ -145,7 +150,12 @@ export default function TeacherSignup() {
                   />
                 </div>
                 <div className="w-full sm:w-28">
-                  <FormButton loading={false} text="인증요청" />
+                  <FormButton
+                    type="button"
+                    loading={false}
+                    disabled={false}
+                    text="인증요청"
+                  />
                 </div>
               </div>
             </div>
@@ -178,7 +188,12 @@ export default function TeacherSignup() {
                 </select>
               </div>
               <div className="mt-2 w-full sm:w-36">
-                <FormButton loading={false} text="이메일 중복확인" />
+                <FormButton
+                  type="button"
+                  loading={false}
+                  disabled={false}
+                  text="이메일 중복확인"
+                />
               </div>
             </div>
 
@@ -204,7 +219,12 @@ export default function TeacherSignup() {
 
             <div className="pt-4 flex justify-center">
               <div className="w-full sm:w-48">
-                <FormButton loading={false} text="MARS 회원 가입" />
+                <FormButton
+                  type="button"
+                  loading={false}
+                  disabled={false}
+                  text="MARS 회원 가입"
+                />
               </div>
             </div>
           </form>

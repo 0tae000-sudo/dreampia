@@ -215,11 +215,21 @@ export default function Signup() {
         <div className="mt-8 flex justify-center">
           {role === "mentor" ? (
             <Link href="/auth/signup/mentor" className="w-full">
-              <FormButton loading={false} text="멘토 회원 가입" />
+              <FormButton
+                type="button"
+                loading={false}
+                disabled={false}
+                text="멘토 회원 가입"
+              />
             </Link>
           ) : (
             <Link href="/auth/signup/teacher" className="w-full">
-              <FormButton loading={false} text="교사 회원 가입" />
+              <FormButton
+                type="button"
+                loading={false}
+                disabled={false}
+                text="교사 회원 가입"
+              />
             </Link>
           )}
         </div>

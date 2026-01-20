@@ -3,16 +3,29 @@
 import FormInput from "@/components/fom-input";
 import FormButton from "@/components/form-btn";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
+import { loginUser } from "@/lib/api";
 
 export default function Login() {
-  const onClick = async () => {
-    const response = await fetch(`https://dreampia.vercel.app/www/users/`, {
-      method: "POST",
-      body: JSON.stringify({ email: "test@test.com", password: "1234" }),
-    });
-    const data = await response.json();
-    console.log(data);
+  // mutation 정의
+  const mutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: (data) => {
+      console.log("성공!", data);
+      alert("로그인에 성공했습니다.");
+    },
+    onError: (error) => {
+      console.error("에러 발생:", error);
+      alert("로그인 중 문제가 발생했습니다.");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // 데이터 전송 시작
+    mutation.mutate({ email: "test@test.com", password: "1234" });
   };
+
   return (
     <div className="min-h-screen bg-[#f6f6f6] text-gray-900">
       {/* Hero banner */}
@@ -40,7 +53,10 @@ export default function Login() {
             <h2 className="text-xl font-black">MARS LOGIN</h2>
             <div className="mt-2 h-0.5 w-24 bg-[#e35b2f]" />
           </div>
-          <form className="mt-6 max-w-md mx-auto space-y-4">
+          <form
+            onSubmit={handleSubmit}
+            className="mt-6 max-w-md mx-auto space-y-4"
+          >
             <FormInput
               autoComplete="email"
               type="email"
@@ -58,8 +74,16 @@ export default function Login() {
             <label className="flex items-center gap-2 text-sm text-gray-600">
               <input type="checkbox" className="accent-[#e35b2f]" /> 자동로그인
             </label>
-            <span onClick={onClick} className="cursor-pointer">
-              <FormButton loading={false} text="로그인" />
+            <span className="cursor-pointer">
+              <FormButton
+                type="submit"
+                loading={mutation.isPending}
+                disabled={mutation.isPending}
+                text="로그인"
+              />
+              {mutation.isError && (
+                <p className="text-red-500">로그인 중 문제가 발생했습니다.</p>
+              )}
             </span>
             <div className="text-center text-xs text-gray-600">
               <Link href="/auth/findmy">아이디/비밀번호 찾기</Link>{" "}

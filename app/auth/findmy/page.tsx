@@ -93,7 +93,12 @@ export default function FindMy() {
                         required={true}
                         errors={[]}
                       />
-                      <FormButton loading={false} text="인증요청" />
+                      <FormButton
+                        type="button"
+                        loading={false}
+                        disabled={false}
+                        text="인증요청"
+                      />
                     </div>
                   </div>
                 </div>
@@ -164,7 +169,12 @@ export default function FindMy() {
                         errors={[]}
                       />
                     </div>
-                    <FormButton loading={false} text="인증요청" />
+                    <FormButton
+                      type="button"
+                      loading={false}
+                      disabled={false}
+                      text="인증요청"
+                    />
                   </div>
                 </div>
               </form>

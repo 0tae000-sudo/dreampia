@@ -54,7 +54,12 @@ export default function MentorSignup() {
                   />
                 </div>
                 <div className="w-full sm:w-28">
-                  <FormButton loading={false} text="중복확인" />
+                  <FormButton
+                    type="button"
+                    loading={false}
+                    disabled={false}
+                    text="중복확인"
+                  />
                 </div>
               </div>
             </div>
@@ -123,7 +128,12 @@ export default function MentorSignup() {
                   />
                 </div>
                 <div className="w-full sm:w-28">
-                  <FormButton loading={false} text="인증요청" />
+                  <FormButton
+                    type="button"
+                    loading={false}
+                    disabled={false}
+                    text="인증요청"
+                  />
                 </div>
               </div>
             </div>
@@ -206,7 +216,12 @@ export default function MentorSignup() {
                   />
                 </div>
                 <div className="w-full sm:w-24">
-                  <FormButton loading={false} text="검색" />
+                  <FormButton
+                    type="button"
+                    loading={false}
+                    disabled={false}
+                    text="검색"
+                  />
                 </div>
               </div>
             </div>
@@ -215,10 +230,20 @@ export default function MentorSignup() {
 
         <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
           <div className="w-full sm:w-32">
-            <FormButton loading={false} text="임시저장" />
+            <FormButton
+              type="button"
+              loading={false}
+              disabled={false}
+              text="임시저장"
+            />
           </div>
           <div className="w-full sm:w-32">
-            <FormButton loading={false} text="회원가입" />
+            <FormButton
+              type="button"
+              loading={false}
+              disabled={false}
+              text="회원가입"
+            />
           </div>
         </div>
       </main>
