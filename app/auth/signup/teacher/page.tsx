@@ -1,7 +1,92 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import FormButton from "@/components/form-btn";
 import FormInput from "@/components/fom-input";
 
+declare global {
+  interface Window {
+    daum?: {
+      Postcode: new (options: {
+        oncomplete: (data: {
+          zonecode: string;
+          roadAddress?: string;
+          address?: string;
+        }) => void;
+      }) => { open: () => void };
+    };
+  }
+}
+
+const POSTCODE_SCRIPT_ID = "daum-postcode-script";
+
 export default function TeacherSignup() {
+  const [postcode, setPostcode] = useState("");
+  const [address, setAddress] = useState("");
+  const [domain, setDomain] = useState("");
+  const scriptLoadedRef = useRef(false);
+  const domainOptions = ["gmail.com", "naver.com", "daum.net"];
+  const selectedDomain = domainOptions.includes(domain) ? domain : "";
+
+  const loadPostcodeScript = useCallback(() => {
+    if (scriptLoadedRef.current) {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      const existing = document.getElementById(
+        POSTCODE_SCRIPT_ID
+      ) as HTMLScriptElement | null;
+      if (existing) {
+        existing.addEventListener("load", () => {
+          scriptLoadedRef.current = true;
+          resolve();
+        });
+        existing.addEventListener("error", () =>
+          reject(new Error("postcode script load failed"))
+        );
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.id = POSTCODE_SCRIPT_ID;
+      script.src =
+        "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
+      script.async = true;
+      script.onload = () => {
+        scriptLoadedRef.current = true;
+        resolve();
+      };
+      script.onerror = () => reject(new Error("postcode script load failed"));
+      document.body.appendChild(script);
+    });
+  }, []);
+
+  const handlePostcodeSearch = useCallback(async () => {
+    try {
+      await loadPostcodeScript();
+      if (!window.daum?.Postcode) {
+        throw new Error("postcode script not available");
+      }
+
+      new window.daum.Postcode({
+        oncomplete: (data) => {
+          setPostcode(data.zonecode);
+          setAddress(data.roadAddress || data.address || "");
+        },
+      }).open();
+    } catch (error) {
+      console.error(error);
+    }
+  }, [loadPostcodeScript]);
+
+  useEffect(() => {
+    loadPostcodeScript().catch(() => {
+      // Script load will be retried when user clicks the button.
+    });
+  }, [loadPostcodeScript]);
+
   return (
     <div className="min-h-screen bg-[#f6f6f6] text-gray-900">
       {/* Hero banner */}
@@ -37,9 +122,9 @@ export default function TeacherSignup() {
               </label>
               <FormInput
                 type="text"
+                name="schoolName"
                 placeholder="학교(기관)명"
                 required={true}
-                errors={[]}
               />
             </div>
 
@@ -48,6 +133,7 @@ export default function TeacherSignup() {
                 학교급 <span className="text-red-500">✔</span>
               </label>
               <select
+                name="schoolLevel"
                 required
                 className="bg-transparent rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
               >
@@ -55,6 +141,7 @@ export default function TeacherSignup() {
                 <option>초등학교</option>
                 <option>중학교</option>
                 <option>고등학교</option>
+                <option>기관</option>
               </select>
             </div>
 
@@ -66,34 +153,40 @@ export default function TeacherSignup() {
                 <div className="flex-1">
                   <FormInput
                     type="text"
+                    name="postcode"
                     placeholder="우편번호"
                     required={true}
-                    errors={[]}
+                    value={postcode}
+                    onChange={(event) => setPostcode(event.target.value)}
                   />
                 </div>
                 <div className="w-full sm:w-32">
-                  <FormButton
+                  <button
+                    className="cursor-pointer bg-orange-600 text-amber-50 rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
                     type="button"
-                    loading={false}
                     disabled={false}
-                    text="우편번호검색"
-                  />
+                    onClick={handlePostcodeSearch}
+                  >
+                    우편번호 검색
+                  </button>
                 </div>
               </div>
               <div className="mt-2">
                 <FormInput
                   type="text"
+                  name="address"
                   placeholder="주소(도로명)"
                   required={true}
-                  errors={[]}
+                  value={address}
+                  onChange={(event) => setAddress(event.target.value)}
                 />
               </div>
               <div className="mt-2">
                 <FormInput
                   type="text"
+                  name="detailAddress"
                   placeholder="상세주소"
                   required={true}
-                  errors={[]}
                 />
               </div>
             </div>
@@ -104,9 +197,9 @@ export default function TeacherSignup() {
               </label>
               <FormInput
                 type="text"
+                name="teacherName"
                 placeholder="교사명"
                 required={true}
-                errors={[]}
               />
             </div>
 
@@ -116,9 +209,9 @@ export default function TeacherSignup() {
               </label>
               <FormInput
                 type="text"
+                name="position"
                 placeholder="직위"
                 required={true}
-                errors={[]}
               />
             </div>
 
@@ -131,31 +224,31 @@ export default function TeacherSignup() {
                   <div className="w-20">
                     <FormInput
                       type="text"
+                      name="phone1"
                       placeholder="010"
                       required={true}
-                      errors={[]}
                     />
                   </div>
                   <FormInput
                     type="text"
+                    name="phone2"
                     placeholder="1234"
                     required={true}
-                    errors={[]}
                   />
                   <FormInput
                     type="text"
+                    name="phone3"
                     placeholder="5678"
                     required={true}
-                    errors={[]}
                   />
                 </div>
                 <div className="w-full sm:w-28">
-                  <FormButton
+                  <button
                     type="button"
-                    loading={false}
-                    disabled={false}
-                    text="인증요청"
-                  />
+                    className="cursor-pointer bg-orange-600 text-amber-50 rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
+                  >
+                    인증요청
+                  </button>
                 </div>
               </div>
             </div>
@@ -168,32 +261,38 @@ export default function TeacherSignup() {
                 <div className="flex items-center gap-2 w-full">
                   <FormInput
                     type="text"
+                    name="email"
                     placeholder="이메일"
                     required={true}
-                    errors={[]}
                   />
                   <span className="text-gray-500">@</span>
                   <FormInput
-                    type="email"
+                    type="text"
+                    name="domain"
                     placeholder="도메인"
                     required={true}
-                    errors={[]}
+                    value={domain}
+                    onChange={(event) => setDomain(event.target.value)}
                   />
                 </div>
-                <select className="bg-transparent rounded-md w-full sm:w-32 h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base">
-                  <option>직접입력</option>
-                  <option>gmail.com</option>
-                  <option>naver.com</option>
-                  <option>daum.net</option>
+                <select
+                  className="bg-transparent rounded-md w-full sm:w-32 h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
+                  value={selectedDomain}
+                  onChange={(event) => setDomain(event.target.value)}
+                >
+                  <option value="">직접입력</option>
+                  <option value="gmail.com">gmail.com</option>
+                  <option value="naver.com">naver.com</option>
+                  <option value="daum.net">daum.net</option>
                 </select>
               </div>
               <div className="mt-2 w-full sm:w-36">
-                <FormButton
+                <button
                   type="button"
-                  loading={false}
-                  disabled={false}
-                  text="이메일 중복확인"
-                />
+                  className="cursor-pointer bg-orange-600 text-amber-50 rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
+                >
+                  이메일 중복확인
+                </button>
               </div>
             </div>
 
@@ -204,15 +303,15 @@ export default function TeacherSignup() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <FormInput
                   type="password"
+                  name="password"
                   placeholder="비밀번호"
                   required={true}
-                  errors={[]}
                 />
                 <FormInput
                   type="password"
+                  name="passwordConfirm"
                   placeholder="비밀번호확인"
                   required={true}
-                  errors={[]}
                 />
               </div>
             </div>
@@ -220,6 +319,7 @@ export default function TeacherSignup() {
             <div className="pt-4 flex justify-center">
               <div className="w-full sm:w-48">
                 <FormButton
+                  className="cursor-pointer"
                   type="button"
                   loading={false}
                   disabled={false}

@@ -64,9 +64,9 @@ export default function FindMy() {
                   </label>
                   <FormInput
                     type="text"
+                    name="name"
                     placeholder="이름"
                     required={true}
-                    errors={[]}
                   />
                 </div>
                 <div>
@@ -77,21 +77,21 @@ export default function FindMy() {
                     <div className="flex items-center gap-2 w-full">
                       <FormInput
                         type="text"
+                        name="phone1"
                         placeholder="010"
                         required={true}
-                        errors={[]}
                       />
                       <FormInput
                         type="text"
+                        name="phone2"
                         placeholder="1234"
                         required={true}
-                        errors={[]}
                       />
                       <FormInput
                         type="text"
+                        name="phone3"
                         placeholder="5678"
                         required={true}
-                        errors={[]}
                       />
                       <FormButton
                         type="button"
@@ -113,15 +113,15 @@ export default function FindMy() {
                     <div className="flex items-center gap-2 w-full">
                       <FormInput
                         type="text"
+                        name="email"
                         required={true}
-                        errors={[]}
                         placeholder="이메일"
                       />
                       <span className="text-gray-500">@</span>
                       <FormInput
-                        type="email"
+                        type="text"
+                        name="domain"
                         required={true}
-                        errors={[]}
                         placeholder="도메인"
                       />
                     </div>
@@ -139,9 +139,9 @@ export default function FindMy() {
                   </label>
                   <FormInput
                     type="text"
+                    name="name"
                     placeholder="이름"
                     required={true}
-                    errors={[]}
                   />
                 </div>
                 <div>
@@ -152,21 +152,21 @@ export default function FindMy() {
                     <div className="flex items-center gap-2 w-full">
                       <FormInput
                         type="text"
+                        name="phone1"
                         placeholder="010"
                         required={true}
-                        errors={[]}
                       />
                       <FormInput
                         type="text"
+                        name="phone2"
                         placeholder="1234"
                         required={true}
-                        errors={[]}
                       />
                       <FormInput
                         type="text"
+                        name="phone3"
                         placeholder="5678"
                         required={true}
-                        errors={[]}
                       />
                     </div>
                     <FormButton

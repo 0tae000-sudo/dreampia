@@ -3,6 +3,7 @@ interface FormButtonProps {
   text: string;
   type: "button" | "submit" | "reset";
   disabled: boolean;
+  className?: string;
 }
 
 export default function FormButton({
@@ -10,12 +11,15 @@ export default function FormButton({
   text,
   type,
   disabled,
-}: FormButtonProps) {
+  className,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & FormButtonProps) {
   return (
     <button
       type={type}
       disabled={disabled}
-      className="primary-btn h-10 disabled:bg-neutral-400  disabled:text-neutral-300 disabled:cursor-not-allowed w-full"
+      className={`primary-btn h-10 disabled:bg-neutral-400  disabled:text-neutral-300 disabled:cursor-not-allowed w-full ${className}`}
+      {...props}
     >
       {loading ? "로딩 중" : text}
     </button>

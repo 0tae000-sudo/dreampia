@@ -58,18 +58,18 @@ export default function Login() {
             className="mt-6 max-w-md mx-auto space-y-4"
           >
             <FormInput
+              name="email"
               autoComplete="email"
               type="email"
               placeholder="이메일주소(아이디)"
               required={true}
-              errors={[]}
             />
             <FormInput
+              name="password"
               type="password"
               autoComplete="current-password"
               placeholder="비밀번호"
               required={true}
-              errors={[]}
             />
             <label className="flex items-center gap-2 text-sm text-gray-600">
               <input type="checkbox" className="accent-[#e35b2f]" /> 자동로그인

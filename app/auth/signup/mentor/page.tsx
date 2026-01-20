@@ -41,16 +41,16 @@ export default function MentorSignup() {
                 <div className="flex items-center gap-2 w-full">
                   <FormInput
                     type="text"
+                    name="id"
                     placeholder="아이디"
                     required={true}
-                    errors={[]}
                   />
                   <span className="text-gray-500">@</span>
                   <FormInput
-                    type="email"
+                    type="text"
+                    name="domain"
                     placeholder="도메인"
                     required={true}
-                    errors={[]}
                   />
                 </div>
                 <div className="w-full sm:w-28">
@@ -71,15 +71,15 @@ export default function MentorSignup() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <FormInput
                   type="password"
+                  name="password"
                   placeholder="비밀번호"
                   required={true}
-                  errors={[]}
                 />
                 <FormInput
                   type="password"
+                  name="passwordConfirm"
                   placeholder="비밀번호확인"
                   required={true}
-                  errors={[]}
                 />
               </div>
             </div>
@@ -94,9 +94,9 @@ export default function MentorSignup() {
               </label>
               <FormInput
                 type="text"
+                name="name"
                 placeholder="이름"
                 required={true}
-                errors={["반드시 실명을 입력해 주세요."]}
               />
             </div>
 
@@ -109,22 +109,22 @@ export default function MentorSignup() {
                   <div className="w-20">
                     <FormInput
                       type="text"
+                      name="phone1"
                       placeholder="010"
                       required={true}
-                      errors={[]}
                     />
                   </div>
                   <FormInput
                     type="text"
+                    name="phone2"
                     placeholder="1234"
                     required={true}
-                    errors={[]}
                   />
                   <FormInput
                     type="text"
+                    name="phone3"
                     placeholder="5678"
                     required={true}
-                    errors={[]}
                   />
                 </div>
                 <div className="w-full sm:w-28">
@@ -161,21 +161,21 @@ export default function MentorSignup() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <FormInput
                   type="text"
+                  name="graduationYear"
                   placeholder="졸업연도"
                   required={true}
-                  errors={[]}
                 />
                 <FormInput
                   type="text"
+                  name="schoolName"
                   placeholder="학교명"
                   required={true}
-                  errors={[]}
                 />
                 <FormInput
                   type="text"
+                  name="major"
                   placeholder="전공"
                   required={true}
-                  errors={[]}
                 />
               </div>
             </div>
@@ -186,9 +186,9 @@ export default function MentorSignup() {
               </label>
               <FormInput
                 type="text"
+                name="selfIntroduction"
                 placeholder="한줄 자기소개"
                 required={true}
-                errors={[]}
               />
             </div>
           </form>
@@ -210,9 +210,9 @@ export default function MentorSignup() {
                 <div className="flex-1">
                   <FormInput
                     type="text"
+                    name="job1"
                     placeholder="직업검색"
                     required={idx === 1}
-                    errors={[]}
                   />
                 </div>
                 <div className="w-full sm:w-24">
