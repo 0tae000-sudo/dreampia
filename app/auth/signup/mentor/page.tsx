@@ -1,5 +1,5 @@
 import FormButton from "@/components/form-btn";
-import FormInput from "@/components/fom-input";
+import FormInput from "@/components/input";
 
 export default function MentorSignup() {
   return (

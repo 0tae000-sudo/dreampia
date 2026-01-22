@@ -1,6 +1,6 @@
 "use client";
 
-import FormInput from "@/components/fom-input";
+import FormInput from "@/components/input";
 import FormButton from "@/components/form-btn";
 import { useState } from "react";
 

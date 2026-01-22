@@ -1,20 +1,55 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import FormButton from "@/components/form-btn";
-import FormInput from "@/components/fom-input";
+import Input from "@/components/input";
 import DaumPostcodeEmbed from "react-daum-postcode";
-
-const POSTCODE_SCRIPT_ID = "daum-postcode-script";
+import { useMutation } from "@tanstack/react-query";
+import { createAccount, type ApiError } from "@/lib/auth/api";
+import { PASSWORD_MIN_LENGTH } from "@/lib/constants";
 
 export default function TeacherSignup() {
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const mutation = useMutation<unknown, ApiError, Record<string, string>>({
+    mutationFn: createAccount,
+    onSuccess: () => {
+      setFieldErrors({});
+      alert("회원가입이 완료되었습니다.");
+    },
+    onError: (error) => {
+      if (error.fieldErrors) {
+        setFieldErrors(error.fieldErrors);
+        return;
+      }
+      setFieldErrors({});
+      alert(error.message || "회원가입에 실패했습니다.");
+    },
+  });
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFieldErrors({});
+    const formData = new FormData(e.currentTarget);
+    const payload = Object.fromEntries(formData.entries());
+    mutation.mutate(payload as Record<string, string>);
+  };
+
   const [isAddressSearchOpen, setIsAddressSearchOpen] = useState(false);
   const [postcode, setPostcode] = useState("");
   const [address, setAddress] = useState("");
   const [domain, setDomain] = useState("");
+  const detailAddressRef = useRef<HTMLInputElement>(null);
   const domainOptions = ["gmail.com", "naver.com", "daum.net"];
   const selectedDomain = domainOptions.includes(domain) ? domain : "";
+  const renderErrors = (name: string) => {
+    const errors = fieldErrors[name];
+    if (!errors?.length) return null;
+    return errors.map((error, index) => (
+      <span key={`${name}-${index}`} className="text-red-500 font-medium">
+        {error}
+      </span>
+    ));
+  };
 
   const handleComplete = (data: any) => {
     let fullAddress = data.address;
@@ -31,6 +66,7 @@ export default function TeacherSignup() {
     setAddress(fullAddress);
     setPostcode(data.zonecode);
     setIsAddressSearchOpen(false);
+    setTimeout(() => detailAddressRef.current?.focus(), 0);
   };
 
   return (
@@ -61,16 +97,17 @@ export default function TeacherSignup() {
         </div>
 
         <div className="mt-8 bg-white rounded-2xl shadow-sm border p-6 md:p-8">
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-semibold mb-2">
                 학교(기관)명 <span className="text-red-500">✔</span>
               </label>
-              <FormInput
+              <Input
                 type="text"
                 name="schoolName"
                 placeholder="학교(기관)명"
                 required={true}
+                errors={fieldErrors.schoolName}
               />
             </div>
 
@@ -89,6 +126,7 @@ export default function TeacherSignup() {
                 <option>고등학교</option>
                 <option>기관</option>
               </select>
+              {renderErrors("schoolLevel")}
             </div>
 
             <div>
@@ -97,13 +135,14 @@ export default function TeacherSignup() {
               </label>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <div className="flex-1">
-                  <FormInput
+                  <Input
                     type="text"
                     name="postcode"
                     placeholder="우편번호"
                     required={true}
                     value={postcode}
                     onChange={(event) => setPostcode(event.target.value)}
+                    errors={fieldErrors.postcode}
                   />
                 </div>
                 <div className="w-full sm:w-32">
@@ -138,21 +177,24 @@ export default function TeacherSignup() {
                 </div>
               )}
               <div className="mt-2">
-                <FormInput
+                <Input
                   type="text"
                   name="address"
                   placeholder="주소(도로명)"
                   required={true}
                   value={address}
                   onChange={(event) => setAddress(event.target.value)}
+                  errors={fieldErrors.address}
                 />
               </div>
               <div className="mt-2">
-                <FormInput
+                <Input
                   type="text"
                   name="detailAddress"
                   placeholder="상세주소"
                   required={true}
+                  ref={detailAddressRef}
+                  errors={fieldErrors.detailAddress}
                 />
               </div>
             </div>
@@ -161,11 +203,12 @@ export default function TeacherSignup() {
               <label className="block text-sm font-semibold mb-2">
                 교사(담당자)명 <span className="text-red-500">✔</span>
               </label>
-              <FormInput
+              <Input
                 type="text"
                 name="teacherName"
                 placeholder="교사명"
                 required={true}
+                errors={fieldErrors.teacherName}
               />
             </div>
 
@@ -173,11 +216,12 @@ export default function TeacherSignup() {
               <label className="block text-sm font-semibold mb-2">
                 직위 <span className="text-red-500">✔</span>
               </label>
-              <FormInput
+              <Input
                 type="text"
                 name="position"
                 placeholder="직위"
                 required={true}
+                errors={fieldErrors.position}
               />
             </div>
 
@@ -188,24 +232,27 @@ export default function TeacherSignup() {
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <div className="flex items-center gap-2 w-full">
                   <div className="w-20">
-                    <FormInput
+                    <Input
                       type="text"
                       name="phone1"
                       placeholder="010"
                       required={true}
+                      errors={fieldErrors.phone1}
                     />
                   </div>
-                  <FormInput
+                  <Input
                     type="text"
                     name="phone2"
                     placeholder="1234"
                     required={true}
+                    errors={fieldErrors.phone2}
                   />
-                  <FormInput
+                  <Input
                     type="text"
                     name="phone3"
                     placeholder="5678"
                     required={true}
+                    errors={fieldErrors.phone3}
                   />
                 </div>
                 <div className="w-full sm:w-28">
@@ -225,20 +272,22 @@ export default function TeacherSignup() {
               </label>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <div className="flex items-center gap-2 w-full">
-                  <FormInput
+                  <Input
                     type="text"
                     name="email"
                     placeholder="이메일"
                     required={true}
+                    errors={fieldErrors.email}
                   />
                   <span className="text-gray-500">@</span>
-                  <FormInput
+                  <Input
                     type="text"
                     name="domain"
                     placeholder="도메인"
                     required={true}
                     value={domain}
                     onChange={(event) => setDomain(event.target.value)}
+                    errors={fieldErrors.domain}
                   />
                 </div>
                 <select
@@ -251,6 +300,7 @@ export default function TeacherSignup() {
                   <option value="naver.com">naver.com</option>
                   <option value="daum.net">daum.net</option>
                 </select>
+                {renderErrors("domain")}
               </div>
               <div className="mt-2 w-full sm:w-36">
                 <button
@@ -267,17 +317,21 @@ export default function TeacherSignup() {
                 비밀번호 <span className="text-red-500">✔</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <FormInput
+                <Input
                   type="password"
                   name="password"
                   placeholder="비밀번호"
                   required={true}
+                  errors={fieldErrors.password}
+                  minLength={PASSWORD_MIN_LENGTH}
                 />
-                <FormInput
+                <Input
                   type="password"
                   name="passwordConfirm"
                   placeholder="비밀번호확인"
                   required={true}
+                  errors={fieldErrors.passwordConfirm}
+                  minLength={PASSWORD_MIN_LENGTH}
                 />
               </div>
             </div>
@@ -286,7 +340,7 @@ export default function TeacherSignup() {
               <div className="w-full sm:w-48">
                 <FormButton
                   className="cursor-pointer"
-                  type="button"
+                  type="submit"
                   loading={false}
                   disabled={false}
                   text="MARS 회원 가입"

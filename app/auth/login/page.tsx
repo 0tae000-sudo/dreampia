@@ -1,29 +1,40 @@
 "use client";
 
-import FormInput from "@/components/fom-input";
+import Input from "@/components/input";
 import FormButton from "@/components/form-btn";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
-import { loginUser } from "@/lib/api";
+import { ApiError, loginUser } from "@/lib/auth/api";
+import { PASSWORD_MIN_LENGTH, PASSWORD_REGEX_ERROR } from "@/lib/constants";
+import { useState } from "react";
 
 export default function Login() {
-  // mutation 정의
-  const mutation = useMutation({
-    mutationFn: loginUser,
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const mutation = useMutation<unknown, ApiError, Record<string, string>>({
+    mutationFn: (userData: Record<string, string>) =>
+      loginUser({ email: userData.email, password: userData.password }),
     onSuccess: (data) => {
-      console.log("성공!", data);
+      setFieldErrors({});
       alert("로그인에 성공했습니다.");
     },
     onError: (error) => {
-      console.error("에러 발생:", error);
-      alert("로그인 중 문제가 발생했습니다.");
+      console.log("로그인 에러", error);
+      console.log("필드에러", error.fieldErrors);
+      if (error.fieldErrors) {
+        setFieldErrors(error.fieldErrors);
+        return;
+      }
+      setFieldErrors({});
+      alert(error.message || "로그인 중 문제가 발생했습니다.");
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // 데이터 전송 시작
-    mutation.mutate({ email: "test@test.com", password: "1234" });
+    setFieldErrors({});
+    const formData = new FormData(e.currentTarget);
+    const payload = Object.fromEntries(formData.entries());
+    mutation.mutate(payload as Record<string, string>);
   };
 
   return (
@@ -57,19 +68,22 @@ export default function Login() {
             onSubmit={handleSubmit}
             className="mt-6 max-w-md mx-auto space-y-4"
           >
-            <FormInput
+            <Input
               name="email"
               autoComplete="email"
               type="email"
               placeholder="이메일주소(아이디)"
               required={true}
+              errors={fieldErrors.email}
             />
-            <FormInput
+            <Input
               name="password"
               type="password"
               autoComplete="current-password"
               placeholder="비밀번호"
               required={true}
+              errors={fieldErrors.password}
+              minLength={PASSWORD_MIN_LENGTH}
             />
             <label className="flex items-center gap-2 text-sm text-gray-600">
               <input type="checkbox" className="accent-[#e35b2f]" /> 자동로그인

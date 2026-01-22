@@ -1,5 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_REGEX,
+  PASSWORD_REGEX_ERROR,
+} from "@/lib/constants";
+import { z } from "zod";
+
+const formSchema = z.object({
+  email: z
+    .string({
+      error: (issue) =>
+        issue.input === undefined
+          ? "이메일은 필수 입력 항목입니다."
+          : undefined,
+    })
+    .trim()
+    .min(1, { message: "이메일은 필수 입력 항목입니다." }),
+  password: z
+    .string({
+      error: (issue) =>
+        issue.input === undefined
+          ? "비밀번호는 필수 입력 항목입니다."
+          : undefined,
+    })
+    .trim()
+    .min(1, { message: "비밀번호는 필수 입력 항목입니다." })
+    .min(PASSWORD_MIN_LENGTH, {
+      message: PASSWORD_REGEX_ERROR,
+    })
+    .regex(PASSWORD_REGEX, {
+      message: PASSWORD_REGEX_ERROR,
+    }),
+});
+
 // 1. 모든 응답에 공통으로 사용할 CORS 헤더
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,10 +61,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    console.log("Log the user in!!! Data:", data);
 
+    const result = formSchema.safeParse(data);
+    if (!result.success) {
+      const flattenedError = z.flattenError(result.error);
+      return NextResponse.json(
+        { success: false, error: flattenedError.fieldErrors },
+        { status: 400, headers: corsHeaders }
+      );
+    }
     return NextResponse.json(
-      { success: true },
+      { success: true, data: result.data },
       { headers: corsHeaders } // 헤더 추가
     );
   } catch (error) {
