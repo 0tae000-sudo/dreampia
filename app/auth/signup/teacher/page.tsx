@@ -6,7 +6,8 @@ import FormButton from "@/components/form-btn";
 import Input from "@/components/input";
 import DaumPostcodeEmbed from "react-daum-postcode";
 import { useMutation } from "@tanstack/react-query";
-import { createAccount, type ApiError } from "@/lib/auth/api";
+import { createAccount } from "@/lib/auth/api";
+import { ApiError } from "@/lib/api-utils";
 import { PASSWORD_MIN_LENGTH } from "@/lib/constants";
 
 export default function TeacherSignup() {

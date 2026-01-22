@@ -4,7 +4,8 @@ import Input from "@/components/input";
 import FormButton from "@/components/form-btn";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
-import { ApiError, loginUser } from "@/lib/auth/api";
+import { loginUser } from "@/lib/auth/api";
+import { ApiError } from "@/lib/api-utils";
 import { PASSWORD_MIN_LENGTH, PASSWORD_REGEX_ERROR } from "@/lib/constants";
 import { useState } from "react";
 
