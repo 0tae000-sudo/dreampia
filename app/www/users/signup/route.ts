@@ -6,8 +6,14 @@ import {
   PASSWORD_REGEX_ERROR,
 } from "@/lib/constants";
 import validator from "validator";
-import { corsHeaders, dynamic, OPTIONS } from "@/lib/api-utils";
-export { dynamic, OPTIONS };
+import { corsHeaders } from "@/lib/api-utils";
+
+export async function OPTIONS() {
+  return NextResponse.json({}, { status: 204, headers: corsHeaders });
+}
+
+// 이 API는 빌드 시점에 정적으로 생성될 것이라고 선언하여 충돌을 피합니다.
+export const dynamic = "force-static";
 
 export async function GET(request: NextRequest) {
   console.log("GET Request received");

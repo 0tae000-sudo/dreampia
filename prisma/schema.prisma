@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id             Int        @id @default(autoincrement())
+  email          String?    @unique
+  password       String
+  name           String
+  phone          String     @unique
+  howcome        String?
+  graduationYear String?
+  schoolName     String?
+  major          String?
+  introduction   String?
+  job1           String?
+  job2           String?
+  job3           String?
+  role           String?
+  isTeacher      Boolean?
+  isMentor       Boolean?
+  created_at     DateTime   @default(now())
+  updated_at     DateTime   @updatedAt
+  SMSToken       SMSToken[]
+}
+
+model SMSToken {
+  id         Int      @id @default(autoincrement())
+  phone      String
+  token      String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
