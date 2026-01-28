@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build:web": "next build",
-    "build:app": "NEXT_PUBLIC_IS_APP=true next build",
+    "build:web": "prisma generate && next build",
+    "build:app": "prisma generate && NEXT_PUBLIC_IS_APP=true next build",
     "ios:build": "npx cap sync",
     "android:build": "npx cap sync",
     "ios:run": "npx cap run ios",
