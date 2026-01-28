@@ -19,7 +19,7 @@ const Input = forwardRef<
       />
       {errors.map((error, index) => (
         <span key={index} className="text-red-500 font-medium">
-          {error}
+          {error === "" ? "\u00A0" : error}
         </span>
       ))}
     </div>

@@ -44,6 +44,24 @@ export const createAccount = async (userData: Record<string, string>) => {
   return payload;
 };
 
+export const checkEmail = async (email: string) => {
+  const response = await fetch(`${API_BASE_URL}/www/users/check-email`, {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload?.message ?? "이메일 중복확인 실패";
+    const fieldErrors =
+      payload?.error && typeof payload.error === "object"
+        ? (payload.error as Record<string, string[]>)
+        : undefined;
+    throw { message, fieldErrors } satisfies ApiError;
+  }
+  return payload;
+};
+
 export const verifyPhone = async (userData: Record<string, string>) => {
   const response = await fetch(`${API_BASE_URL}/www/users/verifyPhone/`, {
     method: "POST",

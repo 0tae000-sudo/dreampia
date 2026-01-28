@@ -6,7 +6,7 @@ import FormButton from "@/components/form-btn";
 import Input from "@/components/input";
 import DaumPostcodeEmbed from "react-daum-postcode";
 import { useMutation } from "@tanstack/react-query";
-import { createAccount } from "@/lib/auth/api";
+import { checkEmail, createAccount } from "@/lib/auth/api";
 import { ApiError } from "@/lib/api-utils";
 import { PASSWORD_MIN_LENGTH } from "@/lib/constants";
 
@@ -27,18 +27,52 @@ export default function TeacherSignup() {
       alert(error.message || "회원가입에 실패했습니다.");
     },
   });
+  const emailCheckMutation = useMutation<unknown, ApiError, string>({
+    mutationFn: checkEmail,
+    onSuccess: () => {
+      setFieldErrors((prev) => {
+        const { email, ...rest } = prev;
+        return rest;
+      });
+      alert("사용 가능한 이메일입니다.");
+    },
+    onError: (error) => {
+      if (error.fieldErrors) {
+        setFieldErrors(error.fieldErrors);
+        return;
+      }
+      alert(error.message || "이메일 중복확인에 실패했습니다.");
+    },
+  });
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFieldErrors({});
     const formData = new FormData(e.currentTarget);
     const payload = Object.fromEntries(formData.entries());
+    const emailLocal = String(payload.email ?? "").trim();
+    const domainValue = String(payload.domain ?? "").trim();
+    if (emailLocal && domainValue) {
+      payload.email = `${emailLocal}@${domainValue}`;
+    }
     mutation.mutate(payload as Record<string, string>);
+  };
+
+  const handleCheckEmail = () => {
+    const localValue = emailLocal.trim();
+    const domainValue = domain.trim();
+    if (!localValue || !domainValue) {
+      alert("이메일과 도메인을 입력해주세요.");
+      return;
+    }
+    const fullEmail = `${localValue}@${domainValue}`;
+    emailCheckMutation.mutate(fullEmail);
   };
 
   const [isAddressSearchOpen, setIsAddressSearchOpen] = useState(false);
   const [postcode, setPostcode] = useState("");
   const [address, setAddress] = useState("");
   const [domain, setDomain] = useState("");
+  const [emailLocal, setEmailLocal] = useState("");
   const detailAddressRef = useRef<HTMLInputElement>(null);
   const domainOptions = ["gmail.com", "naver.com", "daum.net"];
   const selectedDomain = domainOptions.includes(domain) ? domain : "";
@@ -144,6 +178,7 @@ export default function TeacherSignup() {
                     value={postcode}
                     onChange={(event) => setPostcode(event.target.value)}
                     errors={fieldErrors.postcode}
+                    readOnly={true}
                   />
                 </div>
                 <div className="w-full sm:w-32">
@@ -279,6 +314,8 @@ export default function TeacherSignup() {
                     placeholder="이메일"
                     required={true}
                     errors={fieldErrors.email}
+                    value={emailLocal}
+                    onChange={(event) => setEmailLocal(event.target.value)}
                   />
                   <span className="text-gray-500">@</span>
                   <Input
@@ -288,7 +325,7 @@ export default function TeacherSignup() {
                     required={true}
                     value={domain}
                     onChange={(event) => setDomain(event.target.value)}
-                    errors={fieldErrors.domain}
+                    errors={fieldErrors.email ? [""] : undefined}
                   />
                 </div>
                 <select
@@ -307,6 +344,12 @@ export default function TeacherSignup() {
                 <button
                   type="button"
                   className="cursor-pointer bg-orange-600 text-amber-50 rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
+                  onClick={handleCheckEmail}
+                  disabled={
+                    emailCheckMutation.isPending ||
+                    !emailLocal.trim() ||
+                    !domain.trim()
+                  }
                 >
                   이메일 중복확인
                 </button>

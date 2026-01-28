@@ -7,6 +7,8 @@ import {
 } from "@/lib/constants";
 import validator from "validator";
 import { corsHeaders } from "@/lib/api-utils";
+import db from "@/lib/db";
+import bcrypt from "bcrypt";
 
 export async function OPTIONS() {
   return NextResponse.json({}, { status: 204, headers: corsHeaders });
@@ -14,6 +16,22 @@ export async function OPTIONS() {
 
 // 이 API는 빌드 시점에 정적으로 생성될 것이라고 선언하여 충돌을 피합니다.
 export const dynamic = "force-static";
+
+const checkPassword = ({
+  password, passwordConfirm
+}: {password: string, passwordConfirm: string}) => password === passwordConfirm;
+
+const checkUniqueEmail = async (email: string) => {
+  const user = await db.user.findUnique({
+    where: {
+      email,
+    },
+    select:{
+      id: true,
+    }
+  });
+  return Boolean(user) === false;
+};
 
 export async function GET(request: NextRequest) {
   console.log("GET Request received");
@@ -141,7 +159,11 @@ const schema = z
       .toLowerCase()
       .refine((email) => validator.isEmail(email), {
         message: "이메일 형식이 올바르지 않습니다.",
+      })
+      .refine(checkUniqueEmail, {
+        message: "이미 사용 중인 이메일입니다.",
       }),
+      
     domain: z
       .string({
         error: (issue) =>
@@ -165,15 +187,27 @@ const schema = z
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    console.log("Sign up the user!!! Data:", data);
 
-    const result = schema.safeParse(data);
+    const result = await schema.safeParseAsync(data);
     if (!result.success) {
       const flattenedError = z.flattenError(result.error);
       return NextResponse.json(
         { success: false, error: flattenedError.fieldErrors },
         { status: 400, headers: corsHeaders }
       );
+    }else{
+      const hashedPassword = await bcrypt.hash(data.password, 12);
+      const user = await db.user.create({
+        data: {
+          email: data.email,
+          password: hashedPassword,
+          name: data.teacherName,
+          phone: data.phone1 + data.phone2 + data.phone3,
+        },
+        select:{
+          id: true,
+        }
+      });
     }
     return NextResponse.json(
       { success: true },
