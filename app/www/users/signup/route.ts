@@ -9,13 +9,15 @@ import validator from "validator";
 import { corsHeaders } from "@/lib/api-utils";
 import db from "@/lib/db";
 import bcrypt from "bcrypt";
+import { cookies } from "next/headers";
+import { getIronSession } from "iron-session";
 
 export async function OPTIONS() {
   return NextResponse.json({}, { status: 204, headers: corsHeaders });
 }
 
 // 이 API는 빌드 시점에 정적으로 생성될 것이라고 선언하여 충돌을 피합니다.
-export const dynamic = "force-static";
+// export const dynamic = "force-static";
 
 const checkPassword = ({
   password, passwordConfirm
@@ -30,7 +32,19 @@ const checkUniqueEmail = async (email: string) => {
       id: true,
     }
   });
-  return Boolean(user) === false;
+  return Boolean(user) === false; 
+};
+
+const checkUniquePhone = async (phone: string) => {
+  const user = await db.user.findUnique({
+    where: {
+      phone,
+    },
+    select:{
+      id: true,
+    }
+  });
+  return Boolean(user) === false; 
 };
 
 export async function GET(request: NextRequest) {
@@ -182,7 +196,18 @@ const schema = z
         path: ["passwordConfirm"],
       });
     }
-  });
+  })
+  .superRefine(async ({phone1, phone2, phone3}, ctx)=>{
+    const phone = `${phone1}${phone2}${phone3}`;
+    if (!(await checkUniquePhone(phone))) {
+      ctx.addIssue({
+        code: "custom",
+        message: "이미 사용 중인 전화번호입니다.",
+        path: ["phone1"],
+      });
+    }
+  })
+  ;
 
 export async function POST(request: NextRequest) {
   try {
@@ -208,12 +233,20 @@ export async function POST(request: NextRequest) {
           id: true,
         }
       });
+      const cookie = await getIronSession(await cookies(), {
+        cookieName : "dreampia",
+        password: process.env.COOKIE_PASSWORD!
+      });
+      // @ts-ignore
+      cookie.id= user.id
+      await cookie.save()      
     }
     return NextResponse.json(
       { success: true },
       { headers: corsHeaders } // 헤더 추가
     );
   } catch (error) {
+    console.log(error)
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },
       { status: 400, headers: corsHeaders }

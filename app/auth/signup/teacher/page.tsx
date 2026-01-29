@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import FormButton from "@/components/form-btn";
 import Input from "@/components/input";
@@ -11,12 +12,14 @@ import { ApiError } from "@/lib/api-utils";
 import { PASSWORD_MIN_LENGTH } from "@/lib/constants";
 
 export default function TeacherSignup() {
+  const router = useRouter();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const mutation = useMutation<unknown, ApiError, Record<string, string>>({
     mutationFn: createAccount,
     onSuccess: () => {
       setFieldErrors({});
       alert("회원가입이 완료되었습니다.");
+      router.push("/profile");
     },
     onError: (error) => {
       if (error.fieldErrors) {
@@ -82,6 +85,20 @@ export default function TeacherSignup() {
     return errors.map((error, index) => (
       <span key={`${name}-${index}`} className="text-red-500 font-medium">
         {error}
+      </span>
+    ));
+  };
+  const renderGroupErrors = (names: string[]) => {
+    const items = names.flatMap((name) =>
+      (fieldErrors[name] ?? []).map((error, index) => ({
+        key: `${name}-${index}`,
+        error,
+      })),
+    );
+    if (!items.length) return null;
+    return items.map((item) => (
+      <span key={item.key} className="text-red-500 font-medium">
+        {item.error}
       </span>
     ));
   };
@@ -266,29 +283,27 @@ export default function TeacherSignup() {
                 연락처 <span className="text-red-500">✔</span>
               </label>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="flex items-center gap-2 w-full">
-                  <div className="w-20">
-                    <Input
-                      type="text"
-                      name="phone1"
-                      placeholder="010"
-                      required={true}
-                      errors={fieldErrors.phone1}
-                    />
-                  </div>
+                <div className="grid grid-cols-[1fr_1fr_1fr] gap-2 w-full">
+                  <Input
+                    type="text"
+                    name="phone1"
+                    required={true}
+                    errors={fieldErrors.phone1}
+                    hideErrors={true}
+                  />
                   <Input
                     type="text"
                     name="phone2"
-                    placeholder="1234"
                     required={true}
                     errors={fieldErrors.phone2}
+                    hideErrors={true}
                   />
                   <Input
                     type="text"
                     name="phone3"
-                    placeholder="5678"
                     required={true}
                     errors={fieldErrors.phone3}
+                    hideErrors={true}
                   />
                 </div>
                 <div className="w-full sm:w-28">
@@ -299,6 +314,9 @@ export default function TeacherSignup() {
                     인증요청
                   </button>
                 </div>
+              </div>
+              <div className="mt-2 flex flex-col gap-1">
+                {renderGroupErrors(["phone1", "phone2", "phone3"])}
               </div>
             </div>
 
@@ -314,8 +332,12 @@ export default function TeacherSignup() {
                     placeholder="이메일"
                     required={true}
                     errors={fieldErrors.email}
+                    hideErrors={true}
                     value={emailLocal}
                     onChange={(event) => setEmailLocal(event.target.value)}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                   />
                   <span className="text-gray-500">@</span>
                   <Input
@@ -325,7 +347,11 @@ export default function TeacherSignup() {
                     required={true}
                     value={domain}
                     onChange={(event) => setDomain(event.target.value)}
-                    errors={fieldErrors.email ? [""] : undefined}
+                    errors={fieldErrors.domain}
+                    hideErrors={true}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                   />
                 </div>
                 <select
@@ -338,7 +364,9 @@ export default function TeacherSignup() {
                   <option value="naver.com">naver.com</option>
                   <option value="daum.net">daum.net</option>
                 </select>
-                {renderErrors("domain")}
+              </div>
+              <div className="mt-2 flex flex-col gap-1">
+                {renderGroupErrors(["email", "domain"])}
               </div>
               <div className="mt-2 w-full sm:w-36">
                 <button

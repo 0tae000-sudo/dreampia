@@ -50,7 +50,7 @@ export const loginUser = async (userData: {
 };
 
 export const createAccount = async (userData: Record<string, string>) => {
-  const response = await fetch(buildApiUrl("/www/users/signup"), {
+  const response = await fetch(buildApiUrl("/www/users/signup/"), {
     method: "POST",
     body: JSON.stringify(userData),
   });
@@ -70,7 +70,7 @@ export const createAccount = async (userData: Record<string, string>) => {
 };
 
 export const checkEmail = async (email: string) => {
-  const response = await fetch(buildApiUrl("/www/users/check-email"), {
+  const response = await fetch(buildApiUrl("/www/users/check-email/"), {
     method: "POST",
     body: JSON.stringify({ email }),
   });

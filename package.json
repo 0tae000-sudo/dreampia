@@ -29,6 +29,7 @@
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
     "firebase": "11.0.0",
+    "iron-session": "^8.0.4",
     "next": "16.1.1",
     "prisma": "^7.3.0",
     "react": "19.2.3",

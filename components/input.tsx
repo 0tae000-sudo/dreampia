@@ -3,12 +3,16 @@ import { forwardRef } from "react";
 interface InputProps {
   name: string;
   errors?: string[];
+  hideErrors?: boolean;
 }
 
 const Input = forwardRef<
   HTMLInputElement,
   React.InputHTMLAttributes<HTMLInputElement> & InputProps
->(function FormInput({ name, errors = [], ...rest }, ref) {
+>(function FormInput(
+  { name, errors = [], hideErrors = false, ...rest },
+  ref,
+) {
   return (
     <div className="flex flex-col gap-2">
       <input
@@ -17,11 +21,12 @@ const Input = forwardRef<
         name={name}
         {...rest}
       />
-      {errors.map((error, index) => (
-        <span key={index} className="text-red-500 font-medium">
-          {error === "" ? "\u00A0" : error}
-        </span>
-      ))}
+      {!hideErrors &&
+        errors.map((error, index) => (
+          <span key={index} className="text-red-500 font-medium">
+            {error === "" ? "\u00A0" : error}
+          </span>
+        ))}
     </div>
   );
 });
