@@ -3,10 +3,13 @@ import { z } from "zod";
 import validator from "validator";
 
 import db from "@/lib/db";
-import { corsHeaders } from "@/lib/api-utils";
+import { getCorsHeaders } from "@/lib/api-utils";
 
-export async function OPTIONS() {
-  return NextResponse.json({}, { status: 204, headers: corsHeaders });
+export async function OPTIONS(request: NextRequest) {
+  return NextResponse.json(
+    {},
+    { status: 204, headers: getCorsHeaders(request.headers.get("origin")) },
+  );
 }
 
 // 이 API는 빌드 시점에 정적으로 생성될 것이라고 선언하여 충돌을 피합니다.
@@ -34,7 +37,7 @@ export async function POST(request: NextRequest) {
       const flattenedError = z.flattenError(result.error);
       return NextResponse.json(
         { success: false, error: flattenedError.fieldErrors },
-        { status: 400, headers: corsHeaders }
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
       );
     }
 
@@ -51,18 +54,18 @@ export async function POST(request: NextRequest) {
     if (user) {
       return NextResponse.json(
         { success: false, error: { email: ["이미 사용 중인 이메일입니다."] } },
-        { status: 409, headers: corsHeaders }
+        { status: 409, headers: getCorsHeaders(request.headers.get("origin")) }
       );
     }
 
     return NextResponse.json(
       { success: true },
-      { headers: corsHeaders }
+      { headers: getCorsHeaders(request.headers.get("origin")) }
     );
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },
-      { status: 400, headers: corsHeaders }
+      { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
     );
   }
 }

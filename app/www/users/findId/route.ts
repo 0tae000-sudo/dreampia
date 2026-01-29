@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { corsHeaders } from "@/lib/api-utils";
+import { getCorsHeaders } from "@/lib/api-utils";
 import { z } from "zod";
 
-export async function OPTIONS() {
-  return NextResponse.json({}, { status: 204, headers: corsHeaders });
+export async function OPTIONS(request: NextRequest) {
+  return NextResponse.json(
+    {},
+    { status: 204, headers: getCorsHeaders(request.headers.get("origin")) },
+  );
 }
 
 // 이 API는 빌드 시점에 정적으로 생성될 것이라고 선언하여 충돌을 피합니다.
@@ -51,7 +54,7 @@ export async function GET(request: NextRequest) {
   console.log("GET Request received");
   return NextResponse.json(
     { ok: true },
-    { headers: corsHeaders } // 헤더 추가
+    { headers: getCorsHeaders(request.headers.get("origin")) } // 헤더 추가
   );
 }
 
@@ -71,17 +74,17 @@ export async function POST(request: NextRequest) {
       const flattenedError = z.flattenError(result.error);
       return NextResponse.json(
         { success: false, error: flattenedError.fieldErrors },
-        { status: 400, headers: corsHeaders }
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
       );
     }
     return NextResponse.json(
       { success: true, data: result.data },
-      { headers: corsHeaders } // 헤더 추가
+      { headers: getCorsHeaders(request.headers.get("origin")) } // 헤더 추가
     );
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },
-      { status: 400, headers: corsHeaders }
+      { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
     );
   }
 }

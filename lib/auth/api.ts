@@ -35,6 +35,7 @@ export const loginUser = async (userData: {
   const response = await fetch(buildApiUrl("/www/users/login/"), {
     method: "POST",
     body: JSON.stringify(userData),
+    credentials: "include",
   });
 
   const payload = await response.json().catch(() => null);
@@ -53,6 +54,7 @@ export const createAccount = async (userData: Record<string, string>) => {
   const response = await fetch(buildApiUrl("/www/users/signup/"), {
     method: "POST",
     body: JSON.stringify(userData),
+    credentials: "include", // 브라우저가 쿠키를 받을 수 있도록 설정
   });
 
   const payload = await response.json().catch(() => null);

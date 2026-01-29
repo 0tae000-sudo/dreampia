@@ -6,14 +6,17 @@ import {
   PASSWORD_REGEX_ERROR,
 } from "@/lib/constants";
 import validator from "validator";
-import { corsHeaders } from "@/lib/api-utils";
+import { getCorsHeaders } from "@/lib/api-utils";
 import db from "@/lib/db";
 import bcrypt from "bcrypt";
 import { cookies } from "next/headers";
 import { getIronSession } from "iron-session";
 
-export async function OPTIONS() {
-  return NextResponse.json({}, { status: 204, headers: corsHeaders });
+export async function OPTIONS(request: NextRequest) {
+  return NextResponse.json(
+    {},
+    { status: 204, headers: getCorsHeaders(request.headers.get("origin")) },
+  );
 }
 
 // 이 API는 빌드 시점에 정적으로 생성될 것이라고 선언하여 충돌을 피합니다.
@@ -51,7 +54,7 @@ export async function GET(request: NextRequest) {
   console.log("GET Request received");
   return NextResponse.json(
     { ok: true },
-    { headers: corsHeaders } // 헤더 추가
+    { headers: getCorsHeaders(request.headers.get("origin")) } // 헤더 추가
   );
 }
 
@@ -218,7 +221,7 @@ export async function POST(request: NextRequest) {
       const flattenedError = z.flattenError(result.error);
       return NextResponse.json(
         { success: false, error: flattenedError.fieldErrors },
-        { status: 400, headers: corsHeaders }
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
       );
     }else{
       const hashedPassword = await bcrypt.hash(data.password, 12);
@@ -233,23 +236,29 @@ export async function POST(request: NextRequest) {
           id: true,
         }
       });
-      const cookie = await getIronSession(await cookies(), {
-        cookieName : "dreampia",
-        password: process.env.COOKIE_PASSWORD!
+      console.log("session", user)
+      const session = await getIronSession(await cookies(), {
+        cookieName: "dreampia",
+        password: process.env.COOKIE_PASSWORD!,
+        cookieOptions: {
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          secure: process.env.NODE_ENV === "production",
+          httpOnly: true,
+        },
       });
       // @ts-ignore
-      cookie.id= user.id
-      await cookie.save()      
+      session.id = user.id;
+      await session.save();
+      return NextResponse.json(
+        { success: true, data: user.id },
+        { headers: getCorsHeaders(request.headers.get("origin")) } // 헤더 추가
+      );
     }
-    return NextResponse.json(
-      { success: true },
-      { headers: corsHeaders } // 헤더 추가
-    );
   } catch (error) {
     console.log(error)
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },
-      { status: 400, headers: corsHeaders }
+      { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
     );
   }
 }

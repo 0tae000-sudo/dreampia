@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { corsHeaders } from "@/lib/api-utils";
+import { getCorsHeaders } from "@/lib/api-utils";
 
-export async function OPTIONS() {
-  return NextResponse.json({}, { status: 204, headers: corsHeaders });
+export async function OPTIONS(request: NextRequest) {
+  return NextResponse.json(
+    {},
+    { status: 204, headers: getCorsHeaders(request.headers.get("origin")) },
+  );
 }
 
 // 이 API는 빌드 시점에 정적으로 생성될 것이라고 선언하여 충돌을 피합니다.
@@ -63,7 +66,7 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { success: true, error: null },
-        { headers: corsHeaders }
+        { headers: getCorsHeaders(request.headers.get("origin")) }
       );
     } else if (
       phone1Schema.safeParse(data.phone1) &&
@@ -74,18 +77,18 @@ export async function POST(request: NextRequest) {
       // 토큰이 들어왔지 않을 경우 인증번호 발송
       return NextResponse.json(
         { success: true, data: { phone: phone, token: token } },
-        { headers: corsHeaders }
+        { headers: getCorsHeaders(request.headers.get("origin")) }
       );
     } else {
       return NextResponse.json(
         { success: false, error: "Invalid JSON" },
-        { status: 400, headers: corsHeaders }
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
       );
     }
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },
-      { status: 400, headers: corsHeaders }
+      { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
     );
   }
 }

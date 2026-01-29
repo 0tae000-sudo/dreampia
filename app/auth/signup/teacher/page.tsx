@@ -195,7 +195,8 @@ export default function TeacherSignup() {
                     value={postcode}
                     onChange={(event) => setPostcode(event.target.value)}
                     errors={fieldErrors.postcode}
-                    readOnly={true}
+                    readOnly={true} 
+                    onClick={() => setIsAddressSearchOpen(true)}
                   />
                 </div>
                 <div className="w-full sm:w-32">
