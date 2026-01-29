@@ -6,6 +6,9 @@ import {
   PASSWORD_REGEX_ERROR,
 } from "@/lib/constants";
 import { z } from "zod";
+import bcrypt from "bcrypt";
+import getSession from "@/lib/session";
+import db from "@/lib/db";
 
 export async function OPTIONS(request: NextRequest) {
   return NextResponse.json(
@@ -14,8 +17,18 @@ export async function OPTIONS(request: NextRequest) {
   );
 }
 
-// 이 API는 빌드 시점에 정적으로 생성될 것이라고 선언하여 충돌을 피합니다.
-export const dynamic = "force-static";
+const checkEmailExists = async (email: string) => {
+  const user = await db.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+    },
+  });
+  return user !== null;
+};
+
+// 로그인 시 세션 쿠키를 수정해야 하므로 동적 처리로 강제합니다.
+export const dynamic = "force-dynamic";
 
 const formSchema = z.object({
   email: z
@@ -26,7 +39,8 @@ const formSchema = z.object({
           : undefined,
     })
     .trim()
-    .min(1, { message: "이메일은 필수 입력 항목입니다." }),
+    .min(1, { message: "이메일은 필수 입력 항목입니다." })
+    .refine(async (email) => await checkEmailExists(email), { message: "존재하지 않는 이메일입니다." }),
   password: z
     .string({
       error: (issue) =>
@@ -55,8 +69,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-
-    const result = formSchema.safeParse(data);
+    const result = await formSchema.safeParseAsync(data);
     if (!result.success) {
       const flattenedError = z.flattenError(result.error);
       return NextResponse.json(
@@ -64,11 +77,36 @@ export async function POST(request: NextRequest) {
         { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
       );
     }
+    const user = await db.user.findUnique({
+      where: { email: data.email },
+      select: {
+        id: true,
+        password: true,
+      },
+    });
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "존재하지 않는 이메일입니다." },
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
+      );
+    }
+    const isPasswordValid = await bcrypt.compare(data.password, user.password);
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { success: false, error: "비밀번호가 일치하지 않습니다." },
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
+      );
+    }
+    const session = await getSession();
+    session.id = user.id;
+    await session.save();
+    console.log("session", session);
     return NextResponse.json(
-      { success: true, data: result.data },
+      { success: true, data: user.id },
       { headers: getCorsHeaders(request.headers.get("origin")) } // 헤더 추가
     );
   } catch (error) {
+    console.log("error", error);
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },
       { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }

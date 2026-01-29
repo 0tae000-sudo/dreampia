@@ -11,6 +11,7 @@ import db from "@/lib/db";
 import bcrypt from "bcrypt";
 import { cookies } from "next/headers";
 import { getIronSession } from "iron-session";
+import getSession from "@/lib/session";
 
 export async function OPTIONS(request: NextRequest) {
   return NextResponse.json(
@@ -176,11 +177,7 @@ const schema = z
       .toLowerCase()
       .refine((email) => validator.isEmail(email), {
         message: "이메일 형식이 올바르지 않습니다.",
-      })
-      .refine(checkUniqueEmail, {
-        message: "이미 사용 중인 이메일입니다.",
       }),
-      
     domain: z
       .string({
         error: (issue) =>
@@ -210,6 +207,25 @@ const schema = z
       });
     }
   })
+  .superRefine(async ({email}, ctx)=>{
+    const user = await db.user.findUnique({
+      where: {
+        email,
+      },
+      select:{
+        id: true,
+      }
+    });
+    if (user) {
+      ctx.addIssue({
+        code: "custom",
+        message: "이미 사용 중인 이메일입니다.",
+        path: ["email"],
+        fatal: true,
+      });
+      return z.NEVER;
+    }
+  })
   ;
 
 export async function POST(request: NextRequest) {
@@ -218,6 +234,7 @@ export async function POST(request: NextRequest) {
 
     const result = await schema.safeParseAsync(data);
     if (!result.success) {
+      console.log(z.flattenError(result.error))
       const flattenedError = z.flattenError(result.error);
       return NextResponse.json(
         { success: false, error: flattenedError.fieldErrors },
@@ -236,17 +253,7 @@ export async function POST(request: NextRequest) {
           id: true,
         }
       });
-      console.log("session", user)
-      const session = await getIronSession(await cookies(), {
-        cookieName: "dreampia",
-        password: process.env.COOKIE_PASSWORD!,
-        cookieOptions: {
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-          secure: process.env.NODE_ENV === "production",
-          httpOnly: true,
-        },
-      });
-      // @ts-ignore
+      const session = await getSession();
       session.id = user.id;
       await session.save();
       return NextResponse.json(

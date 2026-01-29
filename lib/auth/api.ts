@@ -5,13 +5,13 @@ import { ApiError } from "../api-utils";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const getApiBaseUrl = () => {
-  if (API_BASE_URL) return API_BASE_URL;
-  if (typeof window !== "undefined") {
+  if (typeof window !== "undefined" && !Capacitor.isNativePlatform()) {
     const { origin, protocol } = window.location;
     if (protocol === "http:" || protocol === "https:") {
       return origin;
     }
   }
+  if (API_BASE_URL) return API_BASE_URL;
   if (Capacitor.isNativePlatform()) {
     const serverUrl = (Capacitor as { getServerUrl?: () => string })
       .getServerUrl?.();
@@ -47,6 +47,36 @@ export const loginUser = async (userData: {
         : undefined;
     throw { message, fieldErrors } satisfies ApiError;
   }
+  return payload;
+};
+
+export const getCurrentUser = async () => {
+  const response = await fetch(buildApiUrl("/www/users/me/"), {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload?.error ?? "로그인이 필요합니다.";
+    throw { message } satisfies ApiError;
+  }
+
+  return payload;
+};
+
+export const logoutUser = async () => {
+  const response = await fetch(buildApiUrl("/www/users/logout/"), {
+    method: "POST",
+    credentials: "include",
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload?.error ?? "로그아웃 실패";
+    throw { message } satisfies ApiError;
+  }
+
   return payload;
 };
 

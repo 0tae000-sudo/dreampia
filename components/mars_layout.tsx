@@ -58,7 +58,8 @@ const MarsLayout = () => {
             />
           </Link>
 
-          <Link href="/content/program">
+          {/* <Link href="/content/program"> */}
+          <Link href="/profile">
             <GridItem title="진로교육 프로그램 안내" bgColor="bg-[#003468]">
               <div className="absolute right-4 bottom-4 text-6xl opacity-20">
                 🔍

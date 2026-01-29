@@ -8,15 +8,18 @@ import { loginUser } from "@/lib/auth/api";
 import { ApiError } from "@/lib/api-utils";
 import { PASSWORD_MIN_LENGTH, PASSWORD_REGEX_ERROR } from "@/lib/constants";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const router = useRouter();
   const mutation = useMutation<unknown, ApiError, Record<string, string>>({
     mutationFn: (userData: Record<string, string>) =>
       loginUser({ email: userData.email, password: userData.password }),
     onSuccess: (data) => {
       setFieldErrors({});
       alert("로그인에 성공했습니다.");
+      router.push("/profile/");
     },
     onError: (error) => {
       console.log("로그인 에러", error);
