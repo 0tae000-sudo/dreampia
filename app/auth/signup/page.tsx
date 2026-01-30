@@ -6,7 +6,7 @@ import FormButton from "@/components/form-btn";
 import Link from "next/link";
 
 export default function Signup() {
-  const [role, setRole] = useState<"teacher" | "mentor">("mentor");
+  const [role, setRole] = useState<"teacher" | "mentor">("teacher");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [agreeAll, setAgreeAll] = useState(false);
   const [checked, setChecked] = useState<Record<string, boolean>>(() =>

@@ -24,15 +24,71 @@ model User {
   schoolName     String?
   major          String?
   introduction   String?
-  job1           String?
-  job2           String?
-  job3           String?
   role           String?
   isTeacher      Boolean?
   isMentor       Boolean?
   created_at     DateTime   @default(now())
   updated_at     DateTime   @updatedAt
   SMSToken       SMSToken[]
+  mentorProfile  MentorProfile?
+  
+}
+
+model MentorProfile {
+  id         Int         @id @default(autoincrement())
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int         @unique
+  jobs       MentorJob[]
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
+}
+
+model MentorJob {
+  id           Int                 @id @default(autoincrement())
+  profile      MentorProfile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId    Int
+  title        String
+  order        Int
+  careers      MentorCareer[]
+  certificates MentorCertificate[]
+  awards       MentorAward[]
+  lectures     MentorLecture[]
+}
+
+model MentorCareer {
+  id        Int       @id @default(autoincrement())
+  job       MentorJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId     Int
+  period    String?
+  role      String?
+  company   String?
+}
+
+model MentorCertificate {
+  id      Int       @id @default(autoincrement())
+  job     MentorJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId   Int
+  date    String?
+  name    String?
+  issuer  String?
+}
+
+model MentorAward {
+  id           Int       @id @default(autoincrement())
+  job          MentorJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId        Int
+  date         String?
+  title        String?
+  organization String?
+}
+
+model MentorLecture {
+  id           Int       @id @default(autoincrement())
+  job          MentorJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId        Int
+  period       String?
+  title        String?
+  organization String?
 }
 
 model SMSToken {

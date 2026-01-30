@@ -80,7 +80,7 @@ export const logoutUser = async () => {
   return payload;
 };
 
-export const createAccount = async (userData: Record<string, string>) => {
+export const createAccount = async (userData: Record<string, any>) => {
   const response = await fetch(buildApiUrl("/www/users/signup/"), {
     method: "POST",
     body: JSON.stringify(userData),
