@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Link from "next/link";
 import QueryProvider from "@/components/QueryProvider";
+import RouteGuard from "@/components/route-guard";
 
 // 모바일 기기 노치 및 상태바 대응을 위한 필수 설정
 export const viewport: Viewport = {
@@ -28,6 +29,7 @@ export default function RootLayout({
       <body className="flex flex-col min-h-screen pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] bg-gray-50">
         {/* 메인 콘텐츠 영역 (나머지 공간을 꽉 채우도록 flex-1 적용) */}
         <QueryProvider>
+          <RouteGuard />
           <header className="w-full max-w-7xl mx-auto px-4 py-4 flex justify-between items-center bg-gray-50">
             <div className="flex items-center space-x-2">
               <Link
