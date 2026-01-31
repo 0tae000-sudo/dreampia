@@ -4,17 +4,18 @@ interface InputProps {
   name: string;
   errors?: string[];
   hideErrors?: boolean;
+  containerClassName?: string;
 }
 
 const Input = forwardRef<
   HTMLInputElement,
   React.InputHTMLAttributes<HTMLInputElement> & InputProps
 >(function FormInput(
-  { name, errors = [], hideErrors = false, ...rest },
+  { name, errors = [], hideErrors = false, containerClassName, ...rest },
   ref,
 ) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className={`flex flex-col gap-2 mb-4 ${containerClassName ?? ""}`}>
       <input
         ref={ref}
         className="bg-transparent rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border placeholder:text-neutral-400 px-3 py-2 text-base "

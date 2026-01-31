@@ -143,8 +143,8 @@ export default function TeacherSignup() {
 
       <main className="max-w-3xl mx-auto px-6 py-10">
         <div className="text-center">
-          <span className="inline-block bg-[#e35b2f] text-white text-xs font-bold px-4 py-1 rounded">
-            - 회원정보입력 -
+        <span className="inline-block bg-[#e35b2f] text-white text-sm font-bold px-10 py-2 rounded">
+        - 회원정보입력 -
           </span>
         </div>
 
@@ -197,6 +197,7 @@ export default function TeacherSignup() {
                     errors={fieldErrors.postcode}
                     readOnly={true} 
                     onClick={() => setIsAddressSearchOpen(true)}
+                    containerClassName="mb-0!"
                   />
                 </div>
                 <div className="w-full sm:w-32">
@@ -291,6 +292,7 @@ export default function TeacherSignup() {
                     required={true}
                     errors={fieldErrors.phone1}
                     hideErrors={true}
+                    containerClassName="mb-0!"
                   />
                   <Input
                     type="text"
@@ -298,6 +300,7 @@ export default function TeacherSignup() {
                     required={true}
                     errors={fieldErrors.phone2}
                     hideErrors={true}
+                    containerClassName="mb-0!"
                   />
                   <Input
                     type="text"
@@ -305,6 +308,7 @@ export default function TeacherSignup() {
                     required={true}
                     errors={fieldErrors.phone3}
                     hideErrors={true}
+                    containerClassName="mb-0!"
                   />
                 </div>
                 <div className="w-full sm:w-28">
@@ -339,6 +343,7 @@ export default function TeacherSignup() {
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck={false}
+                    containerClassName="mb-0!"
                   />
                   <span className="text-gray-500">@</span>
                   <Input
@@ -353,6 +358,7 @@ export default function TeacherSignup() {
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck={false}
+                    containerClassName="mb-0!"
                   />
                 </div>
                 <select
@@ -397,6 +403,7 @@ export default function TeacherSignup() {
                   required={true}
                   errors={fieldErrors.password}
                   minLength={PASSWORD_MIN_LENGTH}
+                  containerClassName="mb-0! lg:mb-4!"
                 />
                 <Input
                   type="password"
@@ -405,6 +412,7 @@ export default function TeacherSignup() {
                   required={true}
                   errors={fieldErrors.passwordConfirm}
                   minLength={PASSWORD_MIN_LENGTH}
+                  containerClassName="mb-0! lg:mb-4!"
                 />
               </div>
             </div>

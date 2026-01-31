@@ -224,6 +224,7 @@ export default function FindMy() {
                         name="email"
                         required={true}
                         placeholder="이메일"
+                        containerClassName="mb-0!"
                       />
                       <span className="text-gray-500">@</span>
                       <FormInput
@@ -231,6 +232,7 @@ export default function FindMy() {
                         name="domain"
                         required={true}
                         placeholder="도메인"
+                        containerClassName="mb-0!"
                       />
                     </div>
                     <select className="border rounded-md px-2 py-2 text-base text-gray-600 w-full sm:w-auto">

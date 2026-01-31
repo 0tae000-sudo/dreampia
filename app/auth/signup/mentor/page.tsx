@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 
 import FormButton from "@/components/form-btn";
-import FormInput from "@/components/input";
+import Input from "@/components/input";
 import { jobs } from "@/lib/constants";
 import { checkEmail, createAccount } from "@/lib/auth/api";
 import { ApiError } from "@/lib/api-utils";
@@ -247,22 +247,22 @@ export default function MentorSignup() {
 
       <main className="max-w-3xl mx-auto px-6 py-10">
         <div className="text-center">
-          <span className="inline-block bg-[#e35b2f] text-white text-xs font-bold px-4 py-1 rounded">
+        <span className="inline-block bg-[#e35b2f] text-white text-sm font-bold px-10 py-2 rounded">
             - 회원정보입력 -
           </span>
         </div>
 
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div className="mt-8 bg-white rounded-2xl shadow-sm border p-6 md:p-8">
-            <div>
+            <div className="mb-4">
               <label className="block text-sm font-semibold mb-2">
                 아이디(이메일){" "}
                 <span className="text-xs text-gray-500">*추후 변경 불가</span>{" "}
                 <span className="text-red-500">✔</span>
               </label>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="flex items-center gap-2 w-full">
-                  <FormInput
+                <div className="flex items-center gap-2 w-full lg:mb-4">
+                  <Input
                     type="text"
                     name="email"
                     placeholder="아이디"
@@ -270,9 +270,10 @@ export default function MentorSignup() {
                     value={emailLocal}
                     onChange={(event) => setEmailLocal(event.target.value)}
                     errors={fieldErrors.email}
+                    containerClassName="mb-0!"
                   />
                   <span className="text-gray-500">@</span>
-                  <FormInput
+                  <Input
                     type="text"
                     name="domain"
                     placeholder="도메인"
@@ -280,6 +281,7 @@ export default function MentorSignup() {
                     value={domain}
                     onChange={(event) => setDomain(event.target.value)}
                     errors={fieldErrors.domain}
+                    containerClassName="mb-0!"
                   />
                 </div>
                 <div className="w-full sm:w-28">
@@ -299,14 +301,16 @@ export default function MentorSignup() {
                 비밀번호 <span className="text-red-500">✔</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <FormInput
+                <Input
                   type="password"
                   name="password"
                   placeholder="비밀번호"
                   required={true}
                   errors={fieldErrors.password}
+                  containerClassName="mb-0! lg:mb-4!"
+                  
                 />
-                <FormInput
+                <Input
                   type="password"
                   name="passwordConfirm"
                   placeholder="비밀번호확인"
@@ -324,7 +328,7 @@ export default function MentorSignup() {
                 </span>{" "}
                 <span className="text-red-500">✔</span>
               </label>
-              <FormInput
+              <Input
                 type="text"
                 name="name"
                 placeholder="이름"
@@ -333,34 +337,36 @@ export default function MentorSignup() {
               />
             </div>
 
-            <div>
+            <div className="mb-4">
               <label className="block text-sm font-semibold mb-2">
                 연락처 <span className="text-red-500">✔</span>
               </label>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <div className="flex items-center gap-2 w-full">
-                  <div className="w-20">
-                    <FormInput
+                    <Input
                       type="text"
                       name="phone1"
                       placeholder="010"
                       required={true}
                       errors={fieldErrors.phone1}
+                      containerClassName="mb-0!"
                     />
-                  </div>
-                  <FormInput
+                  
+                  <Input
                     type="text"
                     name="phone2"
                     placeholder="1234"
                     required={true}
                     errors={fieldErrors.phone2}
+                    containerClassName="mb-0!"
                   />
-                  <FormInput
+                  <Input
                     type="text"
                     name="phone3"
                     placeholder="5678"
                     required={true}
                     errors={fieldErrors.phone3}
+                    containerClassName="mb-0!"
                   />
                 </div>
                 <div className="w-full sm:w-28">
@@ -374,7 +380,7 @@ export default function MentorSignup() {
               </div>
             </div>
 
-            <div>
+            <div className="mb-4">
               <label className="block text-sm font-semibold mb-2">
                 가입경로 <span className="text-red-500">✔</span>
               </label>
@@ -395,27 +401,30 @@ export default function MentorSignup() {
               <label className="block text-sm font-semibold mb-2">
                 학력사항(최종학력) <span className="text-red-500">✔</span>
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <FormInput
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+                <Input
                   type="text"
                   name="graduationYear"
                   placeholder="졸업연도"
                   required={true}
                   errors={fieldErrors.graduationYear}
+                  containerClassName="mb-0! lg:mb-4!"
                 />
-                <FormInput
+                <Input
                   type="text"
                   name="schoolName"
                   placeholder="학교명"
                   required={true}
                   errors={fieldErrors.schoolName}
+                  containerClassName="mb-0! lg:mb-4!"
                 />
-                <FormInput
+                <Input
                   type="text"
                   name="major"
                   placeholder="전공"
                   required={true}
                   errors={fieldErrors.major}
+                  containerClassName="mb-0! lg:mb-4!"
                 />
               </div>
             </div>
@@ -424,7 +433,7 @@ export default function MentorSignup() {
               <label className="block text-sm font-semibold mb-2">
                 한줄 자기소개 <span className="text-red-500">✔</span>
               </label>
-              <FormInput
+              <Input
                 type="text"
                 name="selfIntroduction"
                 placeholder="한줄 자기소개"
@@ -452,13 +461,15 @@ export default function MentorSignup() {
               </p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <div className="flex-1">
-                  <FormInput
+                  <Input
                     type="text"
                     name={`job${idx}`}
                     placeholder="직업검색"
                     required={idx === 1}
                     readOnly={true}
                     value={selectedJob}
+                    onClick={() => openJobModal(jobIndex)}
+                    containerClassName="mb-0!"
                   />
                 </div>
                 <div className="w-full sm:w-24">
@@ -484,7 +495,7 @@ export default function MentorSignup() {
                           key={`career-${lineIndex}`}
                           className="grid grid-cols-1 sm:grid-cols-3 gap-2"
                         >
-                          <FormInput
+                          <Input
                             type="text"
                             name={`careerPeriod-${idx}-${lineIndex}`}
                             placeholder="근무기간"
@@ -499,7 +510,7 @@ export default function MentorSignup() {
                               )
                             }
                           />
-                          <FormInput
+                          <Input
                             type="text"
                             name={`careerRole-${idx}-${lineIndex}`}
                             placeholder="담당업무"
@@ -514,7 +525,7 @@ export default function MentorSignup() {
                               )
                             }
                           />
-                          <FormInput
+                          <Input
                             type="text"
                             name={`careerCompany-${idx}-${lineIndex}`}
                             placeholder="회사명 및 부서"
@@ -554,7 +565,7 @@ export default function MentorSignup() {
                           key={`cert-${lineIndex}`}
                           className="grid grid-cols-1 sm:grid-cols-3 gap-2"
                         >
-                          <FormInput
+                          <Input
                             type="text"
                             name={`certDate-${idx}-${lineIndex}`}
                             placeholder="발급일"
@@ -569,7 +580,7 @@ export default function MentorSignup() {
                               )
                             }
                           />
-                          <FormInput
+                          <Input
                             type="text"
                             name={`certName-${idx}-${lineIndex}`}
                             placeholder="자격증명"
@@ -584,7 +595,7 @@ export default function MentorSignup() {
                               )
                             }
                           />
-                          <FormInput
+                          <Input
                             type="text"
                             name={`certIssuer-${idx}-${lineIndex}`}
                             placeholder="발급기관"
@@ -624,7 +635,7 @@ export default function MentorSignup() {
                           key={`award-${lineIndex}`}
                           className="grid grid-cols-1 sm:grid-cols-3 gap-2"
                         >
-                          <FormInput
+                          <Input
                             type="text"
                             name={`awardDate-${idx}-${lineIndex}`}
                             placeholder="수상일"
@@ -639,7 +650,7 @@ export default function MentorSignup() {
                               )
                             }
                           />
-                          <FormInput
+                          <Input
                             type="text"
                             name={`awardTitle-${idx}-${lineIndex}`}
                             placeholder="수상명"
@@ -654,7 +665,7 @@ export default function MentorSignup() {
                               )
                             }
                           />
-                          <FormInput
+                          <Input
                             type="text"
                             name={`awardOrg-${idx}-${lineIndex}`}
                             placeholder="수상기관"
@@ -694,7 +705,7 @@ export default function MentorSignup() {
                           key={`lecture-${lineIndex}`}
                           className="grid grid-cols-1 sm:grid-cols-3 gap-2"
                         >
-                          <FormInput
+                          <Input
                             type="text"
                             name={`lecturePeriod-${idx}-${lineIndex}`}
                             placeholder="강의기간"
@@ -709,7 +720,7 @@ export default function MentorSignup() {
                               )
                             }
                           />
-                          <FormInput
+                          <Input
                             type="text"
                             name={`lectureTitle-${idx}-${lineIndex}`}
                             placeholder="강의명"
@@ -724,7 +735,7 @@ export default function MentorSignup() {
                               )
                             }
                           />
-                          <FormInput
+                          <Input
                             type="text"
                             name={`lectureOrg-${idx}-${lineIndex}`}
                             placeholder="기관"
@@ -793,7 +804,7 @@ export default function MentorSignup() {
               </button>
             </div>
             <div className="px-5 py-4 space-y-4">
-              <FormInput
+              <Input
                 type="text"
                 name="jobSearch"
                 placeholder="직업명 검색"
