@@ -7,7 +7,7 @@ import {
 } from "@/lib/constants";
 import { z } from "zod";
 import bcrypt from "bcrypt";
-import getSession from "@/lib/session";
+import getSession, { SESSION_MAX_AGE, sessionOptions } from "@/lib/session";
 import db from "@/lib/db";
 
 export async function OPTIONS(request: NextRequest) {
@@ -56,6 +56,7 @@ const formSchema = z.object({
     .regex(PASSWORD_REGEX, {
       message: PASSWORD_REGEX_ERROR,
     }),
+  rememberMe: z.boolean().optional().default(false),
 });
 
 export async function GET(request: NextRequest) {
@@ -99,6 +100,25 @@ export async function POST(request: NextRequest) {
     }
     const session = await getSession();
     session.id = user.id;
+    session.rememberMe = result.data.rememberMe;
+    if (result.data.rememberMe) {
+      session.updateConfig({
+        ...sessionOptions,
+        ttl: SESSION_MAX_AGE,
+        cookieOptions: {
+          ...sessionOptions.cookieOptions,
+          maxAge: SESSION_MAX_AGE,
+        },
+      });
+    } else {
+      session.updateConfig({
+        ...sessionOptions,
+        cookieOptions: {
+          ...sessionOptions.cookieOptions,
+          maxAge: undefined,
+        },
+      });
+    }
     await session.save();
     console.log("session", session);
     return NextResponse.json(

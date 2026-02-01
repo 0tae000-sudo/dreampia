@@ -31,6 +31,7 @@ const buildApiUrl = (path: string) => {
 export const loginUser = async (userData: {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }) => {
   const response = await fetch(buildApiUrl("/www/users/login/"), {
     method: "POST",

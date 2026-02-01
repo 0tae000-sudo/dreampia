@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCorsHeaders } from "@/lib/api-utils";
-import getSession from "@/lib/session";
+import getSession, { SESSION_MAX_AGE, sessionOptions } from "@/lib/session";
 import db from "@/lib/db";
 
 // 세션 쿠키를 확인해야 하므로 동적 처리로 강제합니다.
@@ -20,6 +20,18 @@ export async function GET(request: NextRequest) {
       { success: false, error: "로그인이 필요합니다." },
       { status: 401, headers: getCorsHeaders(request.headers.get("origin")) },
     );
+  }
+
+  if (session.rememberMe) {
+    session.updateConfig({
+      ...sessionOptions,
+      ttl: SESSION_MAX_AGE,
+      cookieOptions: {
+        ...sessionOptions.cookieOptions,
+        maxAge: SESSION_MAX_AGE,
+      },
+    });
+    await session.save();
   }
 
   const user = await db.user.findUnique({

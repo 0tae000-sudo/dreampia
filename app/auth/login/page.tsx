@@ -10,12 +10,17 @@ import { PASSWORD_MIN_LENGTH, PASSWORD_REGEX_ERROR } from "@/lib/constants";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+type LoginPayload = {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+};
+
 export default function Login() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const router = useRouter();
-  const mutation = useMutation<unknown, ApiError, Record<string, string>>({
-    mutationFn: (userData: Record<string, string>) =>
-      loginUser({ email: userData.email, password: userData.password }),
+  const mutation = useMutation<unknown, ApiError, LoginPayload>({
+    mutationFn: (userData: LoginPayload) => loginUser(userData),
     onSuccess: (data) => {
       setFieldErrors({});
       alert("로그인에 성공했습니다.");
@@ -37,8 +42,12 @@ export default function Login() {
     e.preventDefault();
     setFieldErrors({});
     const formData = new FormData(e.currentTarget);
-    const payload = Object.fromEntries(formData.entries());
-    mutation.mutate(payload as Record<string, string>);
+    const payload: LoginPayload = {
+      email: String(formData.get("email") ?? ""),
+      password: String(formData.get("password") ?? ""),
+      rememberMe: formData.get("rememberMe") === "on",
+    };
+    mutation.mutate(payload);
   };
 
   return (
@@ -90,7 +99,12 @@ export default function Login() {
               minLength={PASSWORD_MIN_LENGTH}
             />
             <label className="flex items-center gap-2 text-sm text-gray-600">
-              <input type="checkbox" className="accent-[#e35b2f]" /> 자동로그인
+              <input
+                name="rememberMe"
+                type="checkbox"
+                className="accent-[#e35b2f]"
+              />{" "}
+              자동로그인
             </label>
             <span className="cursor-pointer">
               <FormButton
