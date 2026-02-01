@@ -6,9 +6,10 @@ import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { loginUser } from "@/lib/auth/api";
 import { ApiError } from "@/lib/api-utils";
-import { PASSWORD_MIN_LENGTH, PASSWORD_REGEX_ERROR } from "@/lib/constants";
+import { PASSWORD_MIN_LENGTH } from "@/lib/constants";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/toast-provider";
 
 type LoginPayload = {
   email: string;
@@ -18,12 +19,15 @@ type LoginPayload = {
 
 export default function Login() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
+  const { showToast } = useToast();
   const mutation = useMutation<unknown, ApiError, LoginPayload>({
     mutationFn: (userData: LoginPayload) => loginUser(userData),
     onSuccess: (data) => {
       setFieldErrors({});
-      alert("로그인에 성공했습니다.");
+      setFormError(null);
+      showToast("로그인에 성공했습니다.", "success");
       router.push("/profile/");
     },
     onError: (error) => {
@@ -31,16 +35,18 @@ export default function Login() {
       console.log("필드에러", error.fieldErrors);
       if (error.fieldErrors) {
         setFieldErrors(error.fieldErrors);
+        setFormError(null);
         return;
       }
       setFieldErrors({});
-      alert(error.message || "로그인 중 문제가 발생했습니다.");
+      setFormError(error.message || "로그인 중 문제가 발생했습니다.");
     },
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFieldErrors({});
+    setFormError(null);
     const formData = new FormData(e.currentTarget);
     const payload: LoginPayload = {
       email: String(formData.get("email") ?? ""),
@@ -81,6 +87,9 @@ export default function Login() {
             onSubmit={handleSubmit}
             className="mt-6 max-w-md mx-auto space-y-4"
           >
+            {formError && (
+              <p className="text-sm text-red-500 text-center">{formError}</p>
+            )}
             <Input
               name="email"
               autoComplete="email"
@@ -113,9 +122,6 @@ export default function Login() {
                 disabled={mutation.isPending}
                 text="로그인"
               />
-              {mutation.isError && (
-                <p className="text-red-500">로그인 중 문제가 발생했습니다.</p>
-              )}
             </span>
             <div className="text-center text-xs text-gray-600">
               <Link href="/auth/findmy">아이디/비밀번호 찾기</Link>{" "}

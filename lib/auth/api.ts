@@ -41,10 +41,16 @@ export const loginUser = async (userData: {
 
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    const message = payload?.message ?? "로그인 실패";
+    const errorPayload = payload?.error;
+    const message =
+      payload?.message ??
+      (typeof errorPayload === "string" ? errorPayload : "로그인 실패");
     const fieldErrors =
-      payload?.error && typeof payload.error === "object"
-        ? (payload.error as Record<string, string[]>)
+      errorPayload && typeof errorPayload === "object"
+        ? (errorPayload as Record<string, string[]>)
+        : typeof errorPayload === "string" &&
+          errorPayload === "이메일 또는 비밀번호가 올바르지 않습니다."
+        ? { password: [errorPayload] }
         : undefined;
     throw { message, fieldErrors } satisfies ApiError;
   }

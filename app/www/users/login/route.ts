@@ -17,16 +17,6 @@ export async function OPTIONS(request: NextRequest) {
   );
 }
 
-const checkEmailExists = async (email: string) => {
-  const user = await db.user.findUnique({
-    where: { email },
-    select: {
-      id: true,
-    },
-  });
-  return user !== null;
-};
-
 // 로그인 시 세션 쿠키를 수정해야 하므로 동적 처리로 강제합니다.
 export const dynamic = "force-dynamic";
 
@@ -39,8 +29,7 @@ const formSchema = z.object({
           : undefined,
     })
     .trim()
-    .min(1, { message: "이메일은 필수 입력 항목입니다." })
-    .refine(async (email) => await checkEmailExists(email), { message: "존재하지 않는 이메일입니다." }),
+    .min(1, { message: "이메일은 필수 입력 항목입니다." }),
   password: z
     .string({
       error: (issue) =>
@@ -85,16 +74,12 @@ export async function POST(request: NextRequest) {
         password: true,
       },
     });
-    if (!user) {
+    const isPasswordValid = user
+      ? await bcrypt.compare(data.password, user.password)
+      : false;
+    if (!user || !isPasswordValid) {
       return NextResponse.json(
-        { success: false, error: "존재하지 않는 이메일입니다." },
-        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
-      );
-    }
-    const isPasswordValid = await bcrypt.compare(data.password, user.password);
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { success: false, error: "비밀번호가 일치하지 않습니다." },
+        { success: false, error: "이메일 또는 비밀번호가 올바르지 않습니다." },
         { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
       );
     }
