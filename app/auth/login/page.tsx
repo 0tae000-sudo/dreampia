@@ -123,10 +123,20 @@ export default function Login() {
                 text="로그인"
               />
             </span>
-            <div className="text-center text-xs text-gray-600">
-              <Link href="/auth/findmy">아이디/비밀번호 찾기</Link>{" "}
+            <div className="text-center text-xs text-gray-600 mt-2">
+              <Link
+                href="/auth/findmy"
+                className="text-gray-600 hover:text-gray-900"
+              >
+                아이디/비밀번호 찾기
+              </Link>
               <span className="mx-2">|</span>{" "}
-              <Link href="/auth/signup">회원가입</Link>
+              <Link
+                href="/auth/signup"
+                className="text-gray-600 hover:text-gray-900"
+              >
+                회원가입
+              </Link>
             </div>
           </form>
         </div>
