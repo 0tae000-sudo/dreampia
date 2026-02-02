@@ -37,20 +37,23 @@ export default function ToastProvider({
   const toastClearTimeoutRef = useRef<number | null>(null);
 
   const showToast = useCallback((message: string, type: ToastType = "success") => {
+    setToastVisible(false);
     setToastMessage(message);
     setToastType(type);
-    setToastVisible(true);
   }, []);
 
   useEffect(() => {
     if (!toastMessage) return;
-    setToastVisible(true);
+    setToastVisible(false);
     if (toastHideTimeoutRef.current) {
       window.clearTimeout(toastHideTimeoutRef.current);
     }
     if (toastClearTimeoutRef.current) {
       window.clearTimeout(toastClearTimeoutRef.current);
     }
+    const showAnimationFrameId = window.requestAnimationFrame(() => {
+      setToastVisible(true);
+    });
     toastHideTimeoutRef.current = window.setTimeout(() => {
       setToastVisible(false);
     }, 2000);
@@ -58,6 +61,7 @@ export default function ToastProvider({
       setToastMessage(null);
     }, 2400);
     return () => {
+      window.cancelAnimationFrame(showAnimationFrameId);
       if (toastHideTimeoutRef.current) {
         window.clearTimeout(toastHideTimeoutRef.current);
       }
@@ -80,41 +84,44 @@ export default function ToastProvider({
 
   const typeStyles = {
     success: {
-      badgeClass: "bg-emerald-500/20 text-emerald-300",
+      wrapperClass: "bg-emerald-600 text-white",
+      badgeClass: "bg-white/20 text-white",
       icon: "✓",
     },
     error: {
-      badgeClass: "bg-red-500/20 text-red-300",
+      wrapperClass: "bg-red-600 text-white",
+      badgeClass: "bg-white/20 text-white",
       icon: "!",
     },
     info: {
-      badgeClass: "bg-blue-500/20 text-blue-300",
+      wrapperClass: "bg-blue-600 text-white",
+      badgeClass: "bg-white/20 text-white",
       icon: "i",
     },
   } as const;
 
-  const { badgeClass, icon } = typeStyles[toastType];
+  const { wrapperClass, badgeClass, icon } = typeStyles[toastType];
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {toastMessage && (
-        <div className="pointer-events-none fixed top-6 left-1/2 z-50 -translate-x-1/2">
+        <div className="pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2 pb-[env(safe-area-inset-bottom)]">
           <div
             role="status"
             aria-live="polite"
-            className={`flex items-center gap-2 rounded-full border border-white/20 bg-gray-900/90 px-4 py-2 text-sm text-white shadow-xl backdrop-blur transition-all duration-200 ease-out ${
+            className={`flex items-center gap-3 rounded-full ${wrapperClass} px-6 py-3 text-base font-semibold shadow-2xl ring-1 ring-black/10 transition-all duration-600 ease-[cubic-bezier(0.22,1.1,0.36,1)] transform-gpu ${
               toastVisible
-                ? "translate-y-0 opacity-100 scale-100"
-                : "-translate-y-2 opacity-0 scale-95"
+                ? "translate-y-0 opacity-100"
+                : "translate-y-16 opacity-0"
             }`}
           >
             <span
-              className={`flex h-5 w-5 items-center justify-center rounded-full ${badgeClass}`}
+              className={`flex h-6 w-6 items-center justify-center rounded-full ${badgeClass}`}
             >
               {icon}
             </span>
-            <span className="font-medium">{toastMessage}</span>
+            <span className="whitespace-nowrap">{toastMessage}</span>
           </div>
         </div>
       )}

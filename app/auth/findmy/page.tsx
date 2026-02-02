@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { verifyPhone } from "@/lib/auth/api";
 import { ApiError } from "@/lib/api-utils";
+import { useToast } from "@/components/toast-provider";
 
 export default function FindMy() {
   const [token, setToken] = useState<boolean>(false);
@@ -13,6 +14,7 @@ export default function FindMy() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const formRef = useRef<HTMLFormElement>(null);
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const mutation = useMutation<
     unknown, // 성공시 반환 데이터 타입
     ApiError, // 에러타입
@@ -43,12 +45,12 @@ export default function FindMy() {
         typeof variables?.token === "string" && variables.token.trim() !== "";
 
       if (hasToken) {
-        alert("인증요청 되었습니다.");
+        showToast("인증요청 되었습니다.", "info");
         return;
       }
 
       setToken(true);
-      alert("인증번호가 발송되었습니다.");
+      showToast("인증번호가 발송되었습니다.", "success");
     },
     onError: (error, _, context) => {
       // 요청실패시 실행
@@ -60,7 +62,7 @@ export default function FindMy() {
         return;
       }
       setFieldErrors({});
-      alert(error.message || "인증번호 발송에 실패했습니다.");
+      showToast(error.message || "인증번호 발송에 실패했습니다.", "error");
     },
     onSettled: () => {
       // verifyPhone 캐시 무효화, 서버값으로 동기화
@@ -73,6 +75,15 @@ export default function FindMy() {
     setFieldErrors({});
     const formData = new FormData(e.currentTarget);
     const payload = Object.fromEntries(formData.entries());
+    const tokenValue = String(payload.token ?? "").trim();
+    if (tokenValue) {
+      if (tokenValue === "1234") {
+        showToast("인증되었습니다.", "success");
+        return;
+      }
+      showToast("인증번호가 올바르지 않습니다.", "error");
+      return;
+    }
     mutation.mutate(payload as Record<string, string>);
   };
 
@@ -164,6 +175,7 @@ export default function FindMy() {
                           maxLength={3}
                           required={true}
                           errors={fieldErrors.phone1}
+                          containerClassName="mb-0!"
                         />
                         <FormInput
                           type="text"
@@ -172,6 +184,7 @@ export default function FindMy() {
                           maxLength={4}
                           required={true}
                           errors={fieldErrors.phone2}
+                          containerClassName="mb-0!"
                         />
                         <FormInput
                           type="text"
@@ -180,12 +193,14 @@ export default function FindMy() {
                           maxLength={4}
                           required={true}
                           errors={fieldErrors.phone3}
+                          containerClassName="mb-0!"
                         />
                         <FormButton
                           type="button"
                           loading={mutation.isPending}
                           disabled={mutation.isPending}
                           text={token ? "인증번호 재발송" : "인증번호 발송"}
+                          className="text-sm"
                           onClick={handleResend}
                         />
                       </div>
@@ -198,6 +213,7 @@ export default function FindMy() {
                             maxLength={6}
                             required={false}
                             errors={fieldErrors.token}
+                            containerClassName="mb-0!"
                           />
                           <FormButton
                             type="submit"
