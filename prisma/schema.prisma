@@ -100,3 +100,12 @@ model SMSToken {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
+
+model PhoneVerificationToken {
+  id         Int      @id @default(autoincrement())
+  phone      String   @unique
+  token      String
+  expiresAt  DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}

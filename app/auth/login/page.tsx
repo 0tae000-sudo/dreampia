@@ -123,7 +123,7 @@ export default function Login() {
                 text="로그인"
               />
             </span>
-            <div className="text-center text-xs text-gray-600">
+            <div className="text-center text-sm text-gray-600 mt-2 font-bold">
               <Link
                 href="/auth/findmy"
                 className="text-gray-600 hover:text-gray-900"

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getCorsHeaders } from "@/lib/api-utils";
+import db from "@/lib/db";
 
 export async function OPTIONS(request: NextRequest) {
   return NextResponse.json(
@@ -9,8 +10,8 @@ export async function OPTIONS(request: NextRequest) {
   );
 }
 
-// 이 API는 빌드 시점에 정적으로 생성될 것이라고 선언하여 충돌을 피합니다.
-export const dynamic = "force-static";
+// 토큰을 생성/검증하므로 동적으로 처리합니다.
+export const dynamic = "force-dynamic";
 
 const phone1Schema = z
   .string({
@@ -48,43 +49,82 @@ const phone3Schema = z
   .max(4, { message: "전화번호 셋째 자리는 4자리 이하로 입력해주세요." })
   .regex(/^[0-9]+$/, { message: "전화번호 셋째 자리는 숫자로 입력해주세요." });
 
-const tokenSchema = z.coerce.number().min(100000).max(999999);
+const tokenSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{4}$/, { message: "인증번호는 4자리 숫자입니다." });
+
+const requestSchema = z.object({
+  phone1: phone1Schema,
+  phone2: phone2Schema,
+  phone3: phone3Schema,
+  token: tokenSchema.optional(),
+});
+
+const TOKEN_TTL_MS = 3 * 60 * 1000;
 
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-
-    const phone = data.phone1 + data.phone2 + data.phone3;
-    const token = data.token;
-
-    if (
-      // 전화번호 토큰이 들어왔을 경우
-      phone1Schema.safeParse(data.phone1) &&
-      phone2Schema.safeParse(data.phone2) &&
-      phone3Schema.safeParse(data.phone3) &&
-      tokenSchema.safeParse(data.token)
-    ) {
+    const parsed = requestSchema.safeParse(data);
+    if (!parsed.success) {
+      const flattenedError = z.flattenError(parsed.error);
       return NextResponse.json(
-        { success: true, error: null },
-        { headers: getCorsHeaders(request.headers.get("origin")) }
-      );
-    } else if (
-      phone1Schema.safeParse(data.phone1) &&
-      phone2Schema.safeParse(data.phone2) &&
-      phone3Schema.safeParse(data.phone3) &&
-      !tokenSchema.safeParse(data.token)
-    ) {
-      // 토큰이 들어왔지 않을 경우 인증번호 발송
-      return NextResponse.json(
-        { success: true, data: { phone: phone, token: token } },
-        { headers: getCorsHeaders(request.headers.get("origin")) }
-      );
-    } else {
-      return NextResponse.json(
-        { success: false, error: "Invalid JSON" },
+        { success: false, error: flattenedError.fieldErrors },
         { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
       );
     }
+
+    const { phone1, phone2, phone3, token } = parsed.data;
+    const phone = `${phone1}${phone2}${phone3}`;
+
+    if (!token) {
+      const nextToken = String(Math.floor(1000 + Math.random() * 9000));
+      await db.phoneVerificationToken.upsert({
+        where: { phone },
+        create: {
+          phone,
+          token: nextToken,
+          expiresAt: new Date(Date.now() + TOKEN_TTL_MS),
+        },
+        update: {
+          token: nextToken,
+          expiresAt: new Date(Date.now() + TOKEN_TTL_MS),
+        },
+      });
+      console.info("[verifyPhone] token (dev only):", nextToken, phone);
+      return NextResponse.json(
+        { success: true, data: { sent: true } },
+        { headers: getCorsHeaders(request.headers.get("origin")) }
+      );
+    }
+
+    const record = await db.phoneVerificationToken.findUnique({
+      where: { phone },
+    });
+    if (!record || record.expiresAt.getTime() < Date.now()) {
+      await db.phoneVerificationToken.deleteMany({ where: { phone } });
+      return NextResponse.json(
+        {
+          success: false,
+          error: { token: ["인증번호가 만료되었거나 유효하지 않습니다."] },
+        },
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
+      );
+    }
+
+    if (record.token !== token) {
+      return NextResponse.json(
+        { success: false, error: { token: ["인증번호가 올바르지 않습니다."] } },
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
+      );
+    }
+
+    await db.phoneVerificationToken.deleteMany({ where: { phone } });
+    return NextResponse.json(
+      { success: true, data: { verified: true } },
+      { headers: getCorsHeaders(request.headers.get("origin")) }
+    );
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },

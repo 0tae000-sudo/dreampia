@@ -133,6 +133,14 @@ export const verifyPhone = async (userData: Record<string, string>) => {
   });
 
   const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload?.message ?? "인증 실패";
+    const fieldErrors =
+      payload?.error && typeof payload.error === "object"
+        ? (payload.error as Record<string, string[]>)
+        : undefined;
+    throw { message, fieldErrors } satisfies ApiError;
+  }
   return payload;
 };
 
@@ -143,5 +151,13 @@ export const findId = async (userData: Record<string, string>) => {
   });
 
   const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload?.message ?? "아이디 찾기 실패";
+    const fieldErrors =
+      payload?.error && typeof payload.error === "object"
+        ? (payload.error as Record<string, string[]>)
+        : undefined;
+    throw { message, fieldErrors } satisfies ApiError;
+  }
   return payload;
 };

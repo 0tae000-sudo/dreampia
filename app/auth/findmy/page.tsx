@@ -2,14 +2,16 @@
 
 import FormInput from "@/components/input";
 import FormButton from "@/components/form-btn";
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { verifyPhone } from "@/lib/auth/api";
+import { findId, verifyPhone } from "@/lib/auth/api";
 import { ApiError } from "@/lib/api-utils";
 import { useToast } from "@/components/toast-provider";
 
 export default function FindMy() {
   const [token, setToken] = useState<boolean>(false);
+  const [foundEmail, setFoundEmail] = useState<string | null>(null);
   const [tab, setTab] = useState<"id" | "password">("id");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const formRef = useRef<HTMLFormElement>(null);
@@ -45,11 +47,12 @@ export default function FindMy() {
         typeof variables?.token === "string" && variables.token.trim() !== "";
 
       if (hasToken) {
-        showToast("인증요청 되었습니다.", "info");
+        showToast("인증되었습니다.", "success");
         return;
       }
 
       setToken(true);
+      setFoundEmail(null);
       showToast("인증번호가 발송되었습니다.", "success");
     },
     onError: (error, _, context) => {
@@ -70,18 +73,41 @@ export default function FindMy() {
     },
   });
 
+  const findIdMutation = useMutation<
+    { success: boolean; data?: { email?: string } },
+    ApiError,
+    Record<string, string>
+  >({
+    mutationFn: (payload) => findId(payload),
+    onSuccess: (data) => {
+      setFieldErrors({});
+      const email = data?.data?.email;
+      if (email) {
+        setFoundEmail(email);
+        showToast("아이디를 찾았습니다.", "success");
+        return;
+      }
+      showToast("아이디를 찾지 못했습니다.", "error");
+    },
+    onError: (error) => {
+      if (error.fieldErrors) {
+        setFieldErrors(error.fieldErrors);
+        return;
+      }
+      setFieldErrors({});
+      showToast(error.message || "아이디 찾기에 실패했습니다.", "error");
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFieldErrors({});
+    setFoundEmail(null);
     const formData = new FormData(e.currentTarget);
     const payload = Object.fromEntries(formData.entries());
     const tokenValue = String(payload.token ?? "").trim();
     if (tokenValue) {
-      if (tokenValue === "1234") {
-        showToast("인증되었습니다.", "success");
-        return;
-      }
-      showToast("인증번호가 올바르지 않습니다.", "error");
+      findIdMutation.mutate(payload as Record<string, string>);
       return;
     }
     mutation.mutate(payload as Record<string, string>);
@@ -210,7 +236,7 @@ export default function FindMy() {
                             type="text"
                             name="token"
                             placeholder="인증번호"
-                            maxLength={6}
+                            maxLength={4}
                             required={false}
                             errors={fieldErrors.token}
                             containerClassName="mb-0!"
@@ -226,6 +252,22 @@ export default function FindMy() {
                     </div>
                   </div>
                 </div>
+                {foundEmail && (
+                  <div className="mt-6 rounded-xl border bg-[#fff7ee] px-6 py-5 text-center">
+                    <p className="text-sm text-gray-600">회원님의 아이디는</p>
+                    <p className="mt-2 text-lg font-bold text-gray-900">
+                      {foundEmail}
+                    </p>
+                    <div className="mt-4">
+                      <Link
+                        href="/auth/login"
+                        className="inline-flex items-center justify-center rounded-md bg-[#3b4356] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2f3646]"
+                      >
+                        로그인 하기
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </form>
             ) : (
               <form className="space-y-5">
@@ -307,12 +349,6 @@ export default function FindMy() {
                 </div>
               </form>
             )}
-          </div>
-
-          <div className="mt-8 flex justify-center">
-            <button className="px-6 py-3 rounded-md bg-[#c84626] text-white font-bold flex items-center gap-2">
-              🔍 아이디/비밀번호 찾기
-            </button>
           </div>
         </div>
       </main>
