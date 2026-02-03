@@ -85,7 +85,11 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       const flattenedError = z.flattenError(parsed.error);
       return NextResponse.json(
-        { success: false, error: flattenedError.fieldErrors },
+        {
+          success: false,
+          message: "입력값을 확인해주세요.",
+          error: flattenedError.fieldErrors,
+        },
         { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
       );
     }
@@ -100,6 +104,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
+          message: "인증번호가 만료되었거나 유효하지 않습니다.",
           error: { token: ["인증번호가 만료되었거나 유효하지 않습니다."] },
         },
         { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
@@ -107,7 +112,11 @@ export async function POST(request: NextRequest) {
     }
     if (record.token !== token) {
       return NextResponse.json(
-        { success: false, error: { token: ["인증번호가 올바르지 않습니다."] } },
+        {
+          success: false,
+          message: "인증번호가 올바르지 않습니다.",
+          error: { token: ["인증번호가 올바르지 않습니다."] },
+        },
         { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
       );
     }
@@ -120,7 +129,11 @@ export async function POST(request: NextRequest) {
     });
     if (!user?.email) {
       return NextResponse.json(
-        { success: false, error: { name: ["일치하는 회원이 없습니다."] } },
+        {
+          success: false,
+          message: "일치하는 회원이 없습니다.",
+          error: { name: ["일치하는 회원이 없습니다."] },
+        },
         { status: 404, headers: getCorsHeaders(request.headers.get("origin")) }
       );
     }

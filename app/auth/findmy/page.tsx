@@ -5,16 +5,23 @@ import FormButton from "@/components/form-btn";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { findId, verifyPhone } from "@/lib/auth/api";
+import { findId, resetPassword, verifyPhone } from "@/lib/auth/api";
 import { ApiError } from "@/lib/api-utils";
 import { useToast } from "@/components/toast-provider";
+import { PASSWORD_MIN_LENGTH, PASSWORD_REGEX_ERROR } from "@/lib/constants";
+import { useRouter } from "next/navigation"; 
 
 export default function FindMy() {
+  const router = useRouter();
   const [token, setToken] = useState<boolean>(false);
+  const [passwordTokenSent, setPasswordTokenSent] = useState<boolean>(false);
+  const [passwordVerified, setPasswordVerified] = useState<boolean>(false);
+  const [verifiedToken, setVerifiedToken] = useState<string | null>(null);
   const [foundEmail, setFoundEmail] = useState<string | null>(null);
   const [tab, setTab] = useState<"id" | "password">("id");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const formRef = useRef<HTMLFormElement>(null);
+  const passwordFormRef = useRef<HTMLFormElement>(null);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const mutation = useMutation<
@@ -29,6 +36,7 @@ export default function FindMy() {
         phone2: userData.phone2,
         phone3: userData.phone3,
         token: userData.token,
+        purpose: "id",
       }),
     onMutate: async (newData) => {
       // 요청직전 실행
@@ -62,6 +70,10 @@ export default function FindMy() {
       }
       if (error.fieldErrors) {
         setFieldErrors(error.fieldErrors);
+        const firstMessage = Object.values(error.fieldErrors)
+          .flat()
+          .find(Boolean);
+        showToast(firstMessage || "입력값을 확인해주세요.", "error");
         return;
       }
       setFieldErrors({});
@@ -92,10 +104,92 @@ export default function FindMy() {
     onError: (error) => {
       if (error.fieldErrors) {
         setFieldErrors(error.fieldErrors);
+        const firstMessage = Object.values(error.fieldErrors)
+          .flat()
+          .find(Boolean);
+        showToast(firstMessage || "입력값을 확인해주세요.", "error");
         return;
       }
       setFieldErrors({});
       showToast(error.message || "아이디 찾기에 실패했습니다.", "error");
+    },
+  });
+
+  const passwordVerifyMutation = useMutation<
+    unknown,
+    ApiError,
+    Record<string, string>,
+    { prevState?: unknown }
+  >({
+    mutationFn: (userData) => verifyPhone(userData),
+    onMutate: async (newData) => {
+      await queryClient.cancelQueries({ queryKey: ["verifyPhone"] });
+      const prevState = queryClient.getQueryData(["verifyPhone"]);
+      queryClient.setQueryData(["verifyPhone"], (old: any) => ({
+        ...old,
+        ...newData,
+      }));
+      return { prevState };
+    },
+    onSuccess: (_, variables) => {
+      setFieldErrors({});
+      const tokenValue = String(variables?.token ?? "").trim();
+      if (tokenValue) { // 서버에서 토큰을 받아온 경우(인증이 완료된 경우)
+        setPasswordVerified(true);
+        setVerifiedToken(tokenValue);
+        showToast("인증되었습니다.", "success");
+        return;
+      }
+      // 인증번호만 발송된 경우
+      setPasswordTokenSent(true);
+      setPasswordVerified(false);
+      setVerifiedToken(null);
+      showToast("인증번호가 발송되었습니다.", "success");
+    },
+    onError: (error, _, context) => {
+      console.log(error.message);
+      if (context?.prevState) {
+        queryClient.setQueryData(["verifyPhone"], context.prevState);
+      }
+      if (error.fieldErrors) {
+        setFieldErrors(error.fieldErrors);
+        const firstMessage = Object.values(error.fieldErrors)
+          .flat()
+          .find(Boolean);
+        showToast(firstMessage || "입력값을 확인해주세요.", "error");
+        return;
+      }
+      setFieldErrors({});
+      showToast(error.message || "인증번호 발송에 실패했습니다.", "error");
+    },
+    onSettled: () => { // 캐시 무효화, 서버값으로 동기화
+      queryClient.invalidateQueries({ queryKey: ["verifyPhone"] });
+       // verifyPhone 캐시 무효화, 이후 요청시 서버에서 값을 다시 받아옴
+    },
+  });
+
+  const resetPasswordMutation = useMutation<
+    { success: boolean },
+    ApiError,
+    Record<string, string>
+  >({
+    mutationFn: (payload) => resetPassword(payload),
+    onSuccess: () => {
+      setFieldErrors({});
+      showToast("비밀번호가 재설정되었습니다.", "success");
+      router.push("/");
+    },
+    onError: (error) => {
+      if (error.fieldErrors) {
+        setFieldErrors(error.fieldErrors);
+        const firstMessage = Object.values(error.fieldErrors)
+          .flat()
+          .find(Boolean);
+        showToast(firstMessage || "입력값을 확인해주세요.", "error");
+        return;
+      }
+      setFieldErrors({});
+      showToast(error.message || "비밀번호 재설정에 실패했습니다.", "error");
     },
   });
 
@@ -121,8 +215,68 @@ export default function FindMy() {
       phone1: String(formData.get("phone1") ?? ""),
       phone2: String(formData.get("phone2") ?? ""),
       phone3: String(formData.get("phone3") ?? ""),
+      purpose: "id",
     };
     mutation.mutate(payload);
+  };
+
+  const handlePasswordRequest = () => {
+    if (!passwordFormRef.current) return;
+    setFieldErrors({});
+    const formData = new FormData(passwordFormRef.current);
+    const emailId = String(formData.get("email") ?? "").trim();
+    const emailDomain = String(formData.get("domain") ?? "").trim();
+    const payload = {
+      email: `${emailId}@${emailDomain}`,
+      name: String(formData.get("name") ?? ""),
+      phone1: String(formData.get("phone1") ?? ""),
+      phone2: String(formData.get("phone2") ?? ""),
+      phone3: String(formData.get("phone3") ?? ""),
+      purpose: "password",
+    };
+    passwordVerifyMutation.mutate(payload);
+  };
+
+  const handlePasswordVerify = () => {
+    if (!passwordFormRef.current) return;
+    setFieldErrors({});
+    const formData = new FormData(passwordFormRef.current);
+    const emailId = String(formData.get("email") ?? "").trim();
+    const emailDomain = String(formData.get("domain") ?? "").trim();
+    const payload = {
+      email: `${emailId}@${emailDomain}`,
+      name: String(formData.get("name") ?? ""),
+      phone1: String(formData.get("phone1") ?? ""),
+      phone2: String(formData.get("phone2") ?? ""),
+      phone3: String(formData.get("phone3") ?? ""),
+      token: String(formData.get("token") ?? ""),
+      purpose: "password",
+    };
+    passwordVerifyMutation.mutate(payload);
+  };
+
+  const handlePasswordReset = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFieldErrors({});
+    if (!passwordFormRef.current) return;
+    const formData = new FormData(passwordFormRef.current);
+    const emailId = String(formData.get("email") ?? "").trim();
+    const emailDomain = String(formData.get("domain") ?? "").trim();
+    const payload = {
+      email: `${emailId}@${emailDomain}`,
+      name: String(formData.get("name") ?? ""),
+      phone1: String(formData.get("phone1") ?? ""),
+      phone2: String(formData.get("phone2") ?? ""),
+      phone3: String(formData.get("phone3") ?? ""),
+      token: verifiedToken ?? String(formData.get("token") ?? ""),
+      password: String(formData.get("password") ?? ""),
+    };
+    const confirmPassword = String(formData.get("confirmPassword") ?? "");
+    if (payload.password !== confirmPassword) {
+      showToast("비밀번호가 일치하지 않습니다.", "error");
+      return;
+    }
+    resetPasswordMutation.mutate(payload);
   };
 
   return (
@@ -151,7 +305,11 @@ export default function FindMy() {
           <div className="grid grid-cols-2 border rounded-md overflow-hidden">
             <button
               type="button"
-              onClick={() => setTab("id")}
+              onClick={() => {
+                setTab("id");
+                setFieldErrors({});
+                setFoundEmail(null);
+              }}
               className={`py-3 font-bold text-sm ${
                 tab === "id"
                   ? "bg-[#3f51b5] text-white"
@@ -162,7 +320,13 @@ export default function FindMy() {
             </button>
             <button
               type="button"
-              onClick={() => setTab("password")}
+              onClick={() => {
+                setTab("password");
+                setFieldErrors({});
+                setPasswordTokenSent(false);
+                setPasswordVerified(false);
+                setVerifiedToken(null);
+              }}
               className={`py-3 font-bold text-sm ${
                 tab === "password"
                   ? "bg-[#3f51b5] text-white"
@@ -270,7 +434,11 @@ export default function FindMy() {
                 )}
               </form>
             ) : (
-              <form className="space-y-5">
+              <form
+                ref={passwordFormRef}
+                onSubmit={handlePasswordReset}
+                className="space-y-5"
+              >
                 <div>
                   <label className="block text-sm font-semibold mb-2">
                     이메일 <span className="text-red-500">✔</span>
@@ -282,6 +450,7 @@ export default function FindMy() {
                         name="email"
                         required={true}
                         placeholder="이메일"
+                        errors={fieldErrors.email}
                         containerClassName="mb-0!"
                       />
                       <span className="text-gray-500">@</span>
@@ -290,6 +459,7 @@ export default function FindMy() {
                         name="domain"
                         required={true}
                         placeholder="도메인"
+                        errors={fieldErrors.domain}
                         containerClassName="mb-0!"
                       />
                     </div>
@@ -299,6 +469,18 @@ export default function FindMy() {
                       <option>naver.com</option>
                       <option>daum.net</option>
                     </select>
+                  </div>
+                  <div className="mt-2 flex flex-col gap-1">
+                    {fieldErrors.email && (
+                      <span className="text-red-500 font-medium">
+                        {fieldErrors.email}
+                      </span>
+                    )}
+                    {fieldErrors.domain && (
+                      <span className="text-red-500 font-medium">
+                        {fieldErrors.domain}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -310,11 +492,12 @@ export default function FindMy() {
                     name="name"
                     placeholder="이름"
                     required={true}
+                    errors={fieldErrors.name}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    {token ? "인증번호" : "연락처"}
+                    {passwordTokenSent ? "인증번호" : "연락처"}
                     <span className="text-red-500">✔</span>
                     <span className="text-red-500">✔</span>
                   </label>
@@ -325,28 +508,84 @@ export default function FindMy() {
                         name="phone1"
                         placeholder="010"
                         required={true}
+                        containerClassName="mb-0!"
+                        // errors={fieldErrors.phone1}
                       />
                       <FormInput
                         type="text"
                         name="phone2"
                         placeholder="1234"
                         required={true}
+                        containerClassName="mb-0!"
+                        // errors={fieldErrors.phone2}
                       />
                       <FormInput
                         type="text"
                         name="phone3"
                         placeholder="5678"
                         required={true}
+                        containerClassName="mb-0!"
+                        // errors={fieldErrors.phone3}
                       />
                     </div>
                     <FormButton
                       type="button"
-                      loading={false}
-                      disabled={false}
-                      text="인증요청"
+                      loading={passwordVerifyMutation.isPending}
+                      disabled={passwordVerifyMutation.isPending}
+                      text={passwordTokenSent ? "인증번호 재발송" : "인증요청"}
+                      onClick={handlePasswordRequest}
                     />
                   </div>
                 </div>
+                {passwordTokenSent && (
+                  <div className="flex items-center gap-2 w-full">
+                    <FormInput
+                      type="text"
+                      name="token"
+                      placeholder="인증번호"
+                      maxLength={4}
+                      required={false}
+                      // errors={fieldErrors.token}
+                      containerClassName="mb-0!"
+                    />
+                    <FormButton
+                      type="button"
+                      loading={passwordVerifyMutation.isPending}
+                      disabled={passwordVerifyMutation.isPending}
+                      text="인증"
+                      onClick={handlePasswordVerify}
+                    />
+                  </div>
+                )}
+                {passwordVerified && (
+                  <div className="rounded-xl border bg-[#f7f7f7] px-4 py-4 space-y-3">
+                    <FormInput
+                      type="password"
+                      name="password"
+                      placeholder="새 비밀번호"
+                      required={true}
+                      minLength={PASSWORD_MIN_LENGTH}
+                      errors={fieldErrors.password}
+                    />
+                    <FormInput
+                      type="password"
+                      name="confirmPassword"
+                      placeholder="새 비밀번호 확인"
+                      required={true}
+                      minLength={PASSWORD_MIN_LENGTH}
+                      errors={fieldErrors.confirmPassword}
+                    />
+                    <p className="text-xs text-gray-500">
+                      {PASSWORD_REGEX_ERROR}
+                    </p>
+                    <FormButton
+                      type="submit"
+                      loading={resetPasswordMutation.isPending}
+                      disabled={resetPasswordMutation.isPending}
+                      text="비밀번호 재설정"
+                    />
+                  </div>
+                )}
               </form>
             )}
           </div>

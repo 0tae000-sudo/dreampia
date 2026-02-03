@@ -106,10 +106,17 @@ export async function POST(request: NextRequest) {
     }
     await session.save();
     console.log("session", session);
-    return NextResponse.json(
+    const response = NextResponse.json(
       { success: true, data: user.id },
       { headers: getCorsHeaders(request.headers.get("origin")) } // 헤더 추가
     );
+    response.cookies.set("dreampia_session", "1", {
+      path: "/",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: SESSION_MAX_AGE,
+    });
+    return response;
   } catch (error) {
     console.log("error", error);
     return NextResponse.json(

@@ -15,9 +15,16 @@ export async function OPTIONS(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const session = await getSession();
   await session.destroy();
-  return NextResponse.json(
+  const response = NextResponse.json(
     { success: true },
     { headers: getCorsHeaders(request.headers.get("origin")) },
   );
+  response.cookies.set("dreampia_session", "", {
+    path: "/",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 0,
+  });
+  return response;
 }
 

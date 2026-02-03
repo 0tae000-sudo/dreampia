@@ -28,6 +28,25 @@ const buildApiUrl = (path: string) => {
   return baseUrl ? `${baseUrl}${path}` : path;
 };
 
+const SESSION_FLAG_KEY = "dreampia_session";
+
+const hasClientSessionFlag = () => {
+  if (typeof document === "undefined") return true;
+  return document.cookie
+    .split("; ")
+    .some((cookie) => cookie.startsWith(`${SESSION_FLAG_KEY}=`));
+};
+
+const setClientSessionFlag = () => {
+  if (typeof document === "undefined") return;
+  document.cookie = `${SESSION_FLAG_KEY}=1; path=/; max-age=2592000; samesite=lax`;
+};
+
+const clearClientSessionFlag = () => {
+  if (typeof document === "undefined") return;
+  document.cookie = `${SESSION_FLAG_KEY}=; path=/; max-age=0; samesite=lax`;
+};
+
 export const loginUser = async (userData: {
   email: string;
   password: string;
@@ -54,10 +73,14 @@ export const loginUser = async (userData: {
         : undefined;
     throw { message, fieldErrors } satisfies ApiError;
   }
+  setClientSessionFlag();
   return payload;
 };
 
 export const getCurrentUser = async () => {
+  if (!hasClientSessionFlag()) {
+    throw { message: "로그인이 필요합니다." } satisfies ApiError;
+  }
   const response = await fetch(buildApiUrl("/www/users/me/"), {
     method: "GET",
     credentials: "include",
@@ -65,6 +88,7 @@ export const getCurrentUser = async () => {
 
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
+    clearClientSessionFlag();
     const message = payload?.error ?? "로그인이 필요합니다.";
     throw { message } satisfies ApiError;
   }
@@ -84,6 +108,7 @@ export const logoutUser = async () => {
     throw { message } satisfies ApiError;
   }
 
+  clearClientSessionFlag();
   return payload;
 };
 
@@ -153,6 +178,24 @@ export const findId = async (userData: Record<string, string>) => {
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
     const message = payload?.message ?? "아이디 찾기 실패";
+    const fieldErrors =
+      payload?.error && typeof payload.error === "object"
+        ? (payload.error as Record<string, string[]>)
+        : undefined;
+    throw { message, fieldErrors } satisfies ApiError;
+  }
+  return payload;
+};
+
+export const resetPassword = async (userData: Record<string, string>) => {
+  const response = await fetch(buildApiUrl("/www/users/resetPassword/"), {
+    method: "POST",
+    body: JSON.stringify(userData),
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload?.message ?? "비밀번호 재설정 실패";
     const fieldErrors =
       payload?.error && typeof payload.error === "object"
         ? (payload.error as Record<string, string[]>)
