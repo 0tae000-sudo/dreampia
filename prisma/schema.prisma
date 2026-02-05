@@ -31,6 +31,7 @@ model User {
   updated_at     DateTime   @updatedAt
   SMSToken       SMSToken[]
   mentorProfile  MentorProfile?
+  agreementConsents AgreementConsent[]
   
 }
 
@@ -108,4 +109,44 @@ model PhoneVerificationToken {
   expiresAt  DateTime
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model Agreement {
+  id         Int                @id @default(autoincrement())
+  code       String             @unique
+  created_at DateTime           @default(now())
+  updated_at DateTime           @updatedAt
+  versions   AgreementVersion[]
+}
+
+model AgreementVersion {
+  id           Int               @id @default(autoincrement())
+  agreement    Agreement         @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  agreementId  Int
+  version      String
+  title        String
+  body         String
+  isRequired   Boolean           @default(true)
+  role         AgreementRole     @default(ALL)
+  isActive     Boolean           @default(true)
+  created_at   DateTime          @default(now())
+  updated_at   DateTime          @updatedAt
+  consents     AgreementConsent[]
+
+  @@unique([agreementId, version])
+}
+
+model AgreementConsent {
+  id                 Int              @id @default(autoincrement())
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             Int
+  agreementVersion   AgreementVersion @relation(fields: [agreementVersionId], references: [id], onDelete: Cascade)
+  agreementVersionId Int
+  agreedAt           DateTime         @default(now())
+}
+
+enum AgreementRole {
+  ALL
+  TEACHER
+  MENTOR
 }
