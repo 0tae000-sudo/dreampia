@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
 
     const agreements = versions.map((version) => ({
       id: version.agreement.code,
+      versionId: version.id,
       title: version.title,
       body: version.body.replace(/\\n/g, "\n"),
       isRequired: version.isRequired,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 
@@ -51,12 +51,13 @@ const createEmptyDetails = (): JobDetail => ({
 export default function MentorSignup() {
   const router = useRouter();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [agreementVersionIds, setAgreementVersionIds] = useState<number[]>([]);
   const mutation = useMutation<unknown, ApiError, Record<string, any>>({
     mutationFn: createAccount,
     onSuccess: () => {
       setFieldErrors({});
       alert("회원가입이 완료되었습니다.");
-      router.push("/profile");
+      router.push("/");
     },
     onError: (error) => {
       if (error.fieldErrors) {
@@ -101,6 +102,23 @@ export default function MentorSignup() {
     if (!keyword) return jobs;
     return jobs.filter((job) => job.includes(keyword));
   }, [jobSearch]);
+
+  useEffect(() => {
+    const stored = window.sessionStorage.getItem("signup_agreements");
+    if (!stored) return;
+    try {
+      const parsed = JSON.parse(stored) as {
+        agreementVersionIds?: number[];
+      };
+      if (Array.isArray(parsed.agreementVersionIds)) {
+        setAgreementVersionIds(
+          parsed.agreementVersionIds.filter((id) => Number.isFinite(id)),
+        );
+      }
+    } catch {
+      // ignore invalid storage payload
+    }
+  }, []);
 
   const openJobModal = (index: number) => {
     setActiveJobIndex(index);
@@ -184,8 +202,13 @@ export default function MentorSignup() {
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    console.log(agreementVersionIds);
     event.preventDefault();
     setFieldErrors({});
+    if (!agreementVersionIds.length) {
+      alert("약관 동의 정보가 없습니다. 처음 단계에서 다시 진행해주세요.");
+      return;
+    }
     const formData = new FormData(event.currentTarget);
     const payload = Object.fromEntries(formData.entries()) as Record<
       string,
@@ -202,6 +225,8 @@ export default function MentorSignup() {
         ...jobDetails[index],
       }))
       .filter((job) => typeof job.title === "string" && job.title.trim());
+    payload.agreementVersionIds = agreementVersionIds;
+    console.log(payload)
     mutation.mutate(payload);
   };
 

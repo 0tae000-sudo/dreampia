@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import FormButton from "@/components/form-btn";
@@ -14,12 +14,13 @@ import { PASSWORD_MIN_LENGTH } from "@/lib/constants";
 export default function TeacherSignup() {
   const router = useRouter();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const mutation = useMutation<unknown, ApiError, Record<string, string>>({
+  const [agreementVersionIds, setAgreementVersionIds] = useState<number[]>([]);
+  const mutation = useMutation<unknown, ApiError, Record<string, any>>({
     mutationFn: createAccount,
     onSuccess: () => {
       setFieldErrors({});
       alert("회원가입이 완료되었습니다.");
-      router.push("/profile");
+      router.push("/");
     },
     onError: (error) => {
       if (error.fieldErrors) {
@@ -50,6 +51,10 @@ export default function TeacherSignup() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFieldErrors({});
+    if (!agreementVersionIds.length) {
+      alert("약관 동의 정보가 없습니다. 처음 단계에서 다시 진행해주세요.");
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     const payload = Object.fromEntries(formData.entries());
     const emailLocal = String(payload.email ?? "").trim();
@@ -57,7 +62,8 @@ export default function TeacherSignup() {
     if (emailLocal && domainValue) {
       payload.email = `${emailLocal}@${domainValue}`;
     }
-    mutation.mutate(payload as Record<string, string>);
+    (payload as Record<string, unknown>).agreementVersionIds = agreementVersionIds;
+    mutation.mutate(payload as Record<string, any>);
   };
 
   const handleCheckEmail = () => {
@@ -102,6 +108,23 @@ export default function TeacherSignup() {
       </span>
     ));
   };
+
+  useEffect(() => {
+    const stored = window.sessionStorage.getItem("signup_agreements");
+    if (!stored) return;
+    try {
+      const parsed = JSON.parse(stored) as {
+        agreementVersionIds?: number[];
+      };
+      if (Array.isArray(parsed.agreementVersionIds)) {
+        setAgreementVersionIds(
+          parsed.agreementVersionIds.filter((id) => Number.isFinite(id)),
+        );
+      }
+    } catch {
+      // ignore invalid storage payload
+    }
+  }, []);
 
   const handleComplete = (data: any) => {
     let fullAddress = data.address;

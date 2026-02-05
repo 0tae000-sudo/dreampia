@@ -304,8 +304,17 @@ const normalizeMentorJobs = (data: Record<string, any>) => {
   return [];
 };
 
+const parseAgreementVersionIds = (value: unknown) => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => Number(item))
+    .filter((item) => Number.isFinite(item) && item > 0)
+    .map((item) => Math.trunc(item));
+};
+
 export async function POST(request: NextRequest) {
   try {
+    console.log("POST Request received");
     const data = (await request.json()) as Record<string, any>;
     const isTeacherSignup =
       typeof data.teacherName === "string" && data.teacherName.trim() !== "";
@@ -327,6 +336,30 @@ export async function POST(request: NextRequest) {
         { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
       );
     } else {
+      const agreementRole = isTeacherSignup ? "TEACHER" : "MENTOR";
+      const agreementVersionIds = parseAgreementVersionIds(
+        data.agreementVersionIds,
+      );
+      const requiredAgreements = await db.agreementVersion.findMany({
+        where: {
+          isActive: true,
+          isRequired: true,
+          role: { in: ["ALL", agreementRole] },
+        },
+        select: { id: true },
+      });
+      const missingRequired = requiredAgreements.filter(
+        (agreement) => !agreementVersionIds.includes(agreement.id),
+      );
+      if (missingRequired.length) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: { agreements: ["필수 약관에 동의해주세요."] },
+          },
+          { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
+        );
+      }
       const hashedPassword = await bcrypt.hash(data.password, 12);
       const phone = `${data.phone1}${data.phone2}${data.phone3}`;
       const mentorJobs = normalizeMentorJobs(data)
@@ -388,6 +421,24 @@ export async function POST(request: NextRequest) {
       const session = await getSession();
       session.id = user.id;
       await session.save();
+      if (agreementVersionIds.length) {
+        const eligibleAgreements = await db.agreementVersion.findMany({
+          where: {
+            id: { in: agreementVersionIds },
+            isActive: true,
+            role: { in: ["ALL", agreementRole] },
+          },
+          select: { id: true },
+        });
+        if (eligibleAgreements.length) {
+          await db.agreementConsent.createMany({
+            data: eligibleAgreements.map((agreement) => ({
+              userId: user.id,
+              agreementVersionId: agreement.id,
+            })),
+          });
+        }
+      }
       return NextResponse.json(
         { success: true, data: user.id },
         { headers: getCorsHeaders(request.headers.get("origin")) } // 헤더 추가

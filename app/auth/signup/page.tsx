@@ -7,11 +7,14 @@ import { useToast } from "@/components/toast-provider";
 
 type AgreementItem = {
   id: string;
+  versionId: number;
   title: string;
   body: string;
   isRequired?: boolean;
   version?: string;
 };
+
+const AGREEMENT_STORAGE_KEY = "signup_agreements";
 
 export default function Signup() {
   const { showToast } = useToast();
@@ -98,6 +101,17 @@ export default function Signup() {
     if (!allActiveChecked) {
       event.preventDefault();
       showToast("약관에 모두 동의해주세요.", "error");
+      return;
+    }
+    const agreementVersionIds = agreements
+      .filter((item) => checked[item.id])
+      .map((item) => item.versionId)
+      .filter((id) => Number.isFinite(id));
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(
+        AGREEMENT_STORAGE_KEY,
+        JSON.stringify({ role, agreementVersionIds }),
+      );
     }
   };
 
