@@ -1,44 +1,70 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AGREEMENTS } from "./aggrements";
 import FormButton from "@/components/form-btn";
 import Link from "next/link";
+
+type AgreementItem = {
+  id: string;
+  title: string;
+  body: string;
+  isRequired?: boolean;
+  version?: string;
+};
 
 export default function Signup() {
   const [role, setRole] = useState<"teacher" | "mentor">("teacher");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [agreeAll, setAgreeAll] = useState(false);
-  const [checked, setChecked] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(AGREEMENTS.map((item) => [item.id, false]))
-  );
+  const [agreements, setAgreements] = useState<AgreementItem[]>([]);
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
 
   const activeAgreementIds = useMemo(() => {
-    if (role === "teacher") {
-      return ["terms", "privacy"];
-    }
-    return ["terms", "privacy", "content", "message"];
+    return agreements.map((item) => item.id);
+  }, [agreements]);
+  const activeAgreements = useMemo(() => agreements, [agreements]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadAgreements = async () => {
+      try {
+        const response = await fetch(`/api/agreements?role=${role}`);
+        if (!response.ok) {
+          throw new Error("Failed to load agreements");
+        }
+        const data = (await response.json()) as { agreements?: AgreementItem[] };
+        if (!cancelled) {
+          setAgreements(Array.isArray(data.agreements) ? data.agreements : []);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setAgreements([]);
+        }
+      }
+    };
+    loadAgreements();
+    return () => {
+      cancelled = true;
+    };
   }, [role]);
-  const activeAgreements = useMemo(
-    () => AGREEMENTS.filter((item) => activeAgreementIds.includes(item.id)),
-    [activeAgreementIds]
-  );
 
   useEffect(() => {
     setChecked((prev) => {
       const next = { ...prev };
-      AGREEMENTS.forEach((item) => {
+      agreements.forEach((item) => {
         if (!activeAgreementIds.includes(item.id)) {
           next[item.id] = false;
         } else if (next[item.id] === undefined) {
           next[item.id] = false;
         }
       });
-      const allChecked = activeAgreementIds.every((id) => next[id]);
+      const allChecked =
+        activeAgreementIds.length > 0 &&
+        activeAgreementIds.every((id) => next[id]);
       setAgreeAll(allChecked);
       return next;
     });
-  }, [activeAgreementIds]);
+  }, [activeAgreementIds, agreements]);
 
   const toggleExpanded = (id: string) => {
     setExpanded((prev) => (prev === id ? null : id));

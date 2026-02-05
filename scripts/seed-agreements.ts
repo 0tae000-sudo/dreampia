@@ -1,8 +1,35 @@
-export const AGREEMENTS = [
+import "dotenv/config";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaClient } from "@/lib/generated/prisma/client";
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is not set");
+}
+
+const adapter = new PrismaBetterSqlite3({ url: databaseUrl });
+const db = new PrismaClient({ adapter });
+
+type AgreementSeed = {
+  code: string;
+  versions: Array<{
+    version: string;
+    title: string;
+    body: string;
+    isRequired?: boolean;
+    role?: "ALL" | "TEACHER" | "MENTOR";
+    isActive?: boolean;
+  }>;
+};
+
+const agreements: AgreementSeed[] = [
   {
-    id: "terms",
-    title: "MARS 멘토링 서비스 이용약관",
-    body: `제1조(목적)
+    code: "terms",
+    versions: [
+      {
+        version: "2026-02-05",
+        title: "MARS 멘토링 서비스 이용약관",
+        body: `제1조(목적)
     이 이용약관(이하 ''약관'')은 달꿈(이하 회사라 합니다)와 이용 고객(이하 ''회원'')간에 회사가 제공하는 서비스의 가입조건 및 이용에 관한 제반 사항과 기타 필요한 사항을 구체적으로 규정함을 목적으로 합니다.{{{복사무단방지 - 출처 달꿈의 멘토링 플랫폼 MARS}}}
     제2조(이용약관의 효력 및 변경)
     1. 이 약관은 본 회사에 가입된 고객을 포함하여 서비스를 이용하고자 하는 모든 이용자에 대하여 서비스 메뉴 및 회사에 게시하여 공시하거나 기타의 방법으로 고객에게 공지함으로써 그 효력을 발생합니다. 약관의 게시는 MARS(http://www.edumars.net)사이트에서 확인 할 수 있습니다.
@@ -130,11 +157,19 @@ export const AGREEMENTS = [
     3. 서비스 이용으로 발생한 분쟁에 대해 소송이 제기되는 경우 회사의 본사 소재지를 관할하는 법원을 관할 법원으로 합니다.
 
     이 약관은 2025년 03월 20일부터 시행합니다.  {{복사무단방지 - 출처 달꿈의 멘토링 플랫폼 MARS}}`,
+        isRequired: true,
+        role: "ALL",
+        isActive: true,
+      },
+    ],
   },
   {
-    id: "privacy",
-    title: "개인정보취급방침",
-    body: `개인정보란 생존하는 개인에 관한 정보로서 당해 정보에 포함되어 있는 성명，본인인증기관을 통해 인증된 개인식별 번호 등의 사항에 의하여 당해 개인을 식별할 수 있는 정보(당해 정보만으로는 특정 개인을 식별할 수 없더라도 다른 정보와 용이하게 결합하여 식별할 수 있는 것을 포함합니다.)를 말하는 것으로서 ''달꿈''는 (이하 ''회사''는) 고객님의 개인정보를 중요시하며, \"정보통신망 이용촉진 및 정보보호\"에 관한 법률을 준수하고 있습니다. {{{복사무단방지 - 출처 달꿈의 멘토링 플랫폼 MARS}}}
+    code: "privacy",
+    versions: [
+      {
+        version: "2026-02-05",
+        title: "개인정보취급방침",
+        body: `개인정보란 생존하는 개인에 관한 정보로서 당해 정보에 포함되어 있는 성명，본인인증기관을 통해 인증된 개인식별 번호 등의 사항에 의하여 당해 개인을 식별할 수 있는 정보(당해 정보만으로는 특정 개인을 식별할 수 없더라도 다른 정보와 용이하게 결합하여 식별할 수 있는 것을 포함합니다.)를 말하는 것으로서 ''달꿈''는 (이하 ''회사''는) 고객님의 개인정보를 중요시하며, \"정보통신망 이용촉진 및 정보보호\"에 관한 법률을 준수하고 있습니다. {{{복사무단방지 - 출처 달꿈의 멘토링 플랫폼 MARS}}}
     회사는 개인정보취급방침을 통하여 고객님께서 제공하시는 개인정보가 어떠한 용도와 방식으로 이용되고 있으며, 개인정보보호를 위해 어떠한 조치가 취해지고 있는지 알려드립니다. 회사는 개인정보취급방침을 개정하는 경우 웹사이트 공지사항(또는 개별공지)을 통하여 공지할 것입니다. {{{복사무단방지 - 출처 달꿈의 멘토링 플랫폼 MARS}}}
     이 방침은 2025년 03월 20일부터 시행합니다.
     {{{복사무단방지 - 출처 달꿈의 멘토링플랫폼 MARS}}}
@@ -167,15 +202,98 @@ export const AGREEMENTS = [
     - 전화번호: 02-514-1110
     - 주 소: 서울특별시 서초구 양재천로 17길 22, 두원빌딩 3층
     {{{복사무단방지 - 출처 달꿈의 멘토링 플랫폼 MARS}}}`,
+        isRequired: true,
+        role: "ALL",
+        isActive: true,
+      },
+    ],
   },
   {
-    id: "content",
-    title: "콘텐츠산업진흥법에 의한 콘텐츠 보호",
-    body: "서비스 내 콘텐츠는 관련 법령에 의해 보호되며, 무단 복제 및 배포를 금합니다.",
+    code: "content",
+    versions: [
+      {
+        version: "2026-02-05",
+        title: "콘텐츠산업진흥법에 의한 콘텐츠 보호",
+        body: `서비스 내 콘텐츠는 관련 법령에 의해 보호되며, 무단 복제 및 배포를 금합니다.`,
+        isRequired: true,
+        role: "MENTOR",
+        isActive: true,
+      },
+    ],
   },
   {
-    id: "message",
-    title: "관리자 메시지 수신동의",
-    body: "서비스 안내 및 운영 관련 공지 등을 수신하는 것에 동의합니다.",
+    code: "message",
+    versions: [
+      {
+        version: "2026-02-05",
+        title: "관리자 메시지 수신동의",
+        body: `서비스 안내 및 운영 관련 공지 등을 수신하는 것에 동의합니다.`,
+        isRequired: true,
+        role: "MENTOR",
+        isActive: true,
+      },
+    ],
   },
 ];
+
+const upsertAgreement = async (seed: AgreementSeed) => {
+  const agreement = await db.agreement.upsert({
+    where: { code: seed.code },
+    update: {},
+    create: { code: seed.code },
+  });
+
+  for (const version of seed.versions) {
+    const existing = await db.agreementVersion.findFirst({
+      where: {
+        agreementId: agreement.id,
+        version: version.version,
+      },
+      select: { id: true },
+    });
+
+    if (existing) {
+      await db.agreementVersion.update({
+        where: { id: existing.id },
+        data: {
+          title: version.title,
+          body: version.body,
+          isRequired: version.isRequired ?? true,
+          role: version.role ?? "ALL",
+          isActive: version.isActive ?? true,
+        },
+      });
+    } else {
+      await db.agreementVersion.create({
+        data: {
+          agreementId: agreement.id,
+          version: version.version,
+          title: version.title,
+          body: version.body,
+          isRequired: version.isRequired ?? true,
+          role: version.role ?? "ALL",
+          isActive: version.isActive ?? true,
+        },
+      });
+    }
+  }
+};
+
+const main = async () => {
+  for (const seed of agreements) {
+    await upsertAgreement(seed);
+  }
+};
+
+main()
+  .then(async () => {
+    await db.$disconnect();
+    console.log("Seed completed.");
+  })
+  .catch(async (error) => {
+    console.error(error);
+    await db.$disconnect();
+    process.exit(1);
+  });
+
+
