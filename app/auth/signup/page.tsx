@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import FormButton from "@/components/form-btn";
 import Link from "next/link";
+import { useToast } from "@/components/toast-provider";
 
 type AgreementItem = {
   id: string;
@@ -13,6 +14,7 @@ type AgreementItem = {
 };
 
 export default function Signup() {
+  const { showToast } = useToast();
   const [role, setRole] = useState<"teacher" | "mentor">("teacher");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [agreeAll, setAgreeAll] = useState(false);
@@ -23,6 +25,10 @@ export default function Signup() {
     return agreements.map((item) => item.id);
   }, [agreements]);
   const activeAgreements = useMemo(() => agreements, [agreements]);
+  const allActiveChecked = useMemo(() => {
+    if (!activeAgreementIds.length) return false;
+    return activeAgreementIds.every((id) => checked[id]);
+  }, [activeAgreementIds, checked]);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,6 +93,12 @@ export default function Signup() {
       setAgreeAll(allChecked);
       return next;
     });
+  };
+  const handleProceed = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!allActiveChecked) {
+      event.preventDefault();
+      showToast("약관에 모두 동의해주세요.", "error");
+    }
   };
 
   return (
@@ -240,7 +252,11 @@ export default function Signup() {
 
         <div className="mt-8 flex justify-center">
           {role === "mentor" ? (
-            <Link href="/auth/signup/mentor" className="w-full">
+            <Link
+              href="/auth/signup/mentor"
+              className="w-full"
+              onClick={handleProceed}
+            >
               <FormButton
                 type="button"
                 loading={false}
@@ -249,7 +265,11 @@ export default function Signup() {
               />
             </Link>
           ) : (
-            <Link href="/auth/signup/teacher" className="w-full">
+            <Link
+              href="/auth/signup/teacher"
+              className="w-full"
+              onClick={handleProceed}
+            >
               <FormButton
                 type="button"
                 loading={false}
