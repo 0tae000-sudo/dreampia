@@ -6,7 +6,6 @@ import { useMutation } from "@tanstack/react-query";
 
 import FormButton from "@/components/form-btn";
 import Input from "@/components/input";
-import { jobs } from "@/lib/constants";
 import { checkEmail, createAccount } from "@/lib/auth/api";
 import { ApiError } from "@/lib/api-utils";
 
@@ -90,6 +89,7 @@ export default function MentorSignup() {
   const [jobModalOpen, setJobModalOpen] = useState(false);
   const [activeJobIndex, setActiveJobIndex] = useState<number | null>(null);
   const [jobSearch, setJobSearch] = useState("");
+  const [jobs, setJobs] = useState<string[]>([]);
   const [jobSelections, setJobSelections] = useState<string[]>(["", "", ""]);
   const [jobDetails, setJobDetails] = useState<JobDetail[]>([
     createEmptyDetails(),
@@ -101,7 +101,7 @@ export default function MentorSignup() {
     const keyword = jobSearch.trim();
     if (!keyword) return jobs;
     return jobs.filter((job) => job.includes(keyword));
-  }, [jobSearch]);
+  }, [jobSearch, jobs]);
 
   useEffect(() => {
     const stored = window.sessionStorage.getItem("signup_agreements");
@@ -118,6 +118,30 @@ export default function MentorSignup() {
     } catch {
       // ignore invalid storage payload
     }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadJobs = async () => {
+      try {
+        const response = await fetch("/api/jobs");
+        if (!response.ok) {
+          throw new Error("Failed to load jobs");
+        }
+        const data = (await response.json()) as { jobs?: string[] };
+        if (!cancelled) {
+          setJobs(Array.isArray(data.jobs) ? data.jobs : []);
+        }
+      } catch {
+        if (!cancelled) {
+          setJobs([]);
+        }
+      }
+    };
+    loadJobs();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const openJobModal = (index: number) => {
