@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 
 import FormButton from "@/components/form-btn";
 import Input from "@/components/input";
-import { checkEmail, createAccount } from "@/lib/auth/api";
+import { checkEmail, createAccount, verifyPhone } from "@/lib/auth/api";
 import { ApiError } from "@/lib/api-utils";
+import { useToast } from "@/components/toast-provider";
 
 type CareerItem = {
   period: string;
@@ -49,8 +50,12 @@ const createEmptyDetails = (): JobDetail => ({
 
 export default function MentorSignup() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [agreementVersionIds, setAgreementVersionIds] = useState<number[]>([]);
+  const [phoneTokenSent, setPhoneTokenSent] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const mutation = useMutation<unknown, ApiError, Record<string, any>>({
     mutationFn: createAccount,
     onSuccess: () => {
@@ -82,6 +87,35 @@ export default function MentorSignup() {
         return;
       }
       alert(error.message || "이메일 중복확인에 실패했습니다.");
+    },
+  });
+  const phoneVerifyMutation = useMutation<
+    unknown,
+    ApiError,
+    Record<string, string>
+  >({
+    mutationFn: (payload) => verifyPhone(payload),
+    onSuccess: (_, variables) => {
+      const tokenValue = String(variables?.token ?? "").trim();
+      if (tokenValue) {
+        setPhoneVerified(true);
+        showToast("인증되었습니다.", "success");
+        return;
+      }
+      setPhoneTokenSent(true);
+      setPhoneVerified(false);
+      showToast("인증번호가 발송되었습니다.", "success");
+    },
+    onError: (error) => {
+      if (error.fieldErrors) {
+        setFieldErrors(error.fieldErrors);
+        const firstMessage = Object.values(error.fieldErrors)
+          .flat()
+          .find(Boolean);
+        showToast(firstMessage || "입력값을 확인해주세요.", "error");
+        return;
+      }
+      showToast(error.message || "인증번호 발송에 실패했습니다.", "error");
     },
   });
   const [domain, setDomain] = useState("");
@@ -229,6 +263,10 @@ export default function MentorSignup() {
     console.log(agreementVersionIds);
     event.preventDefault();
     setFieldErrors({});
+    if (!phoneVerified) {
+      showToast("연락처 인증을 완료해주세요.", "error");
+      return;
+    }
     if (!agreementVersionIds.length) {
       alert("약관 동의 정보가 없습니다. 처음 단계에서 다시 진행해주세요.");
       return;
@@ -264,12 +302,53 @@ export default function MentorSignup() {
     emailCheckMutation.mutate(`${localValue}@${domainValue}`);
   };
 
+  const handlePhoneRequest = () => {
+    if (!formRef.current) return;
+    setFieldErrors({});
+    const formData = new FormData(formRef.current);
+    const payload = {
+      phone1: String(formData.get("phone1") ?? ""),
+      phone2: String(formData.get("phone2") ?? ""),
+      phone3: String(formData.get("phone3") ?? ""),
+      purpose: "id",
+    };
+    phoneVerifyMutation.mutate(payload);
+  };
+
+  const handlePhoneVerify = () => {
+    if (!formRef.current) return;
+    setFieldErrors({});
+    const formData = new FormData(formRef.current);
+    const payload = {
+      phone1: String(formData.get("phone1") ?? ""),
+      phone2: String(formData.get("phone2") ?? ""),
+      phone3: String(formData.get("phone3") ?? ""),
+      token: String(formData.get("token") ?? ""),
+      purpose: "id",
+    };
+    phoneVerifyMutation.mutate(payload);
+  };
+
   const renderErrors = (name: string) => {
     const errors = fieldErrors[name];
     if (!errors?.length) return null;
     return errors.map((error, index) => (
       <span key={`${name}-${index}`} className="text-red-500 font-medium">
         {error}
+      </span>
+    ));
+  };
+  const renderGroupErrors = (names: string[]) => {
+    const items = names.flatMap((name) =>
+      (fieldErrors[name] ?? []).map((error, index) => ({
+        key: `${name}-${index}`,
+        error,
+      })),
+    );
+    if (!items.length) return null;
+    return items.map((item) => (
+      <span key={item.key} className="text-red-500 font-medium">
+        {item.error}
       </span>
     ));
   };
@@ -301,7 +380,7 @@ export default function MentorSignup() {
           </span>
         </div>
 
-        <form className="space-y-5" onSubmit={handleSubmit}>
+        <form ref={formRef} className="space-y-5" onSubmit={handleSubmit}>
           <div className="mt-8 bg-white rounded-2xl shadow-sm border p-6 md:p-8">
             <div className="mb-4">
               <label className="block text-sm font-semibold mb-2">
@@ -391,22 +470,24 @@ export default function MentorSignup() {
                 연락처 <span className="text-red-500">✔</span>
               </label>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="flex items-center gap-2 w-full">
-                    <Input
-                      type="text"
-                      name="phone1"
-                      placeholder="010"
-                      required={true}
-                      errors={fieldErrors.phone1}
-                      containerClassName="mb-0!"
-                    />
-                  
+                <div className="flex-1 grid grid-cols-[1fr_1fr_1fr] gap-2 w-full">
+                  <Input
+                    type="text"
+                    name="phone1"
+                    placeholder="010"
+                    required={true}
+                    errors={fieldErrors.phone1}
+                    hideErrors={true}
+                    containerClassName="mb-0!"
+                  />
+
                   <Input
                     type="text"
                     name="phone2"
                     placeholder="1234"
                     required={true}
                     errors={fieldErrors.phone2}
+                    hideErrors={true}
                     containerClassName="mb-0!"
                   />
                   <Input
@@ -415,17 +496,46 @@ export default function MentorSignup() {
                     placeholder="5678"
                     required={true}
                     errors={fieldErrors.phone3}
+                    hideErrors={true}
                     containerClassName="mb-0!"
                   />
                 </div>
-                <div className="w-full sm:w-28">
-                  <FormButton
+                <div className="w-full sm:w-28 flex-1">
+                  <button
                     type="button"
-                    loading={false}
-                    disabled={false}
-                    text="인증요청"
-                  />
+                    className="cursor-pointer bg-orange-600 text-amber-50 rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
+                    onClick={handlePhoneRequest}
+                    disabled={phoneVerifyMutation.isPending}
+                  >
+                    {phoneTokenSent ? "인증번호 재발송" : "인증요청"}
+                  </button>
                 </div>
+              </div>
+              {phoneTokenSent && (
+                <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 mb-10">
+                  <div className="flex items-center gap-2 w-full">
+                    <Input
+                      type="text"
+                      name="token"
+                      placeholder="인증번호"
+                      maxLength={4}
+                      required={false}
+                      errors={fieldErrors.token}
+                      containerClassName="mb-0! flex-1!"
+                    />
+                    <FormButton
+                      type="button"
+                      loading={phoneVerifyMutation.isPending}
+                      disabled={phoneVerifyMutation.isPending}
+                      text={phoneVerified ? "인증완료" : "인증"}
+                      onClick={handlePhoneVerify}
+                      className="flex-1!"
+                    />
+                  </div>
+                </div>
+              )}
+              <div className="mt-2 flex flex-col gap-1">
+                {renderGroupErrors(["phone1", "phone2", "phone3"])}
               </div>
             </div>
 

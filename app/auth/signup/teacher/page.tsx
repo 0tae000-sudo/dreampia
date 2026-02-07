@@ -407,7 +407,7 @@ export default function TeacherSignup() {
                 </div>
               </div>
               {phoneTokenSent && (
-                <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 mb-10">
                   <div className="flex items-center gap-2 w-full">
                     <Input
                       type="text"
