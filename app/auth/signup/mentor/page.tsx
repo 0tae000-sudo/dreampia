@@ -41,6 +41,8 @@ type JobDetail = {
   lectures: LectureItem[];
 };
 
+const DRAFT_STORAGE_KEY = "mentor_signup_draft";
+
 const createEmptyDetails = (): JobDetail => ({
   career: [{ period: "", role: "", company: "" }],
   certificates: [{ date: "", name: "", issuer: "" }],
@@ -65,6 +67,9 @@ export default function MentorSignup() {
     mutationFn: createAccount,
     onSuccess: () => {
       setFieldErrors({});
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+      }
       alert("회원가입이 완료되었습니다.");
       router.push("/");
     },
@@ -161,6 +166,71 @@ export default function MentorSignup() {
       }
     } catch {
       // ignore invalid storage payload
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!stored) return;
+    try {
+      const parsed = JSON.parse(stored) as {
+        formValues?: Record<string, string>;
+        jobSelections?: string[];
+        jobDetails?: JobDetail[];
+        phoneInputs?: { phone1?: string; phone2?: string; phone3?: string };
+        emailLocal?: string;
+        domain?: string;
+      };
+      if (Array.isArray(parsed.jobSelections)) {
+        setJobSelections(parsed.jobSelections.slice(0, 3));
+      }
+      if (Array.isArray(parsed.jobDetails)) {
+        const nextDetails =
+          parsed.jobDetails.length === 3 ? parsed.jobDetails : undefined;
+        if (nextDetails) {
+          setJobDetails(nextDetails);
+        }
+      }
+      const nextPhoneInputs = {
+        phone1: parsed.phoneInputs?.phone1 ?? parsed.formValues?.phone1 ?? "",
+        phone2: parsed.phoneInputs?.phone2 ?? parsed.formValues?.phone2 ?? "",
+        phone3: parsed.phoneInputs?.phone3 ?? parsed.formValues?.phone3 ?? "",
+      };
+      setPhoneInputs(nextPhoneInputs);
+      setEmailLocal(
+        parsed.emailLocal ?? parsed.formValues?.email ?? "",
+      );
+      setDomain(parsed.domain ?? parsed.formValues?.domain ?? "");
+
+      const formValues = parsed.formValues ?? {};
+      const applyValues = () => {
+        const form = formRef.current;
+        if (!form) return;
+        Object.entries(formValues).forEach(([key, value]) => {
+          if (
+            key === "token" ||
+            key === "email" ||
+            key === "domain" ||
+            key === "phone1" ||
+            key === "phone2" ||
+            key === "phone3"
+          ) {
+            return;
+          }
+          const field = form.elements.namedItem(key);
+          if (
+            field instanceof HTMLInputElement ||
+            field instanceof HTMLSelectElement ||
+            field instanceof HTMLTextAreaElement
+          ) {
+            field.value = String(value ?? "");
+          }
+        });
+      };
+      requestAnimationFrame(applyValues);
+    } catch {
+      // ignore invalid draft payload
     }
   }, []);
 
@@ -300,6 +370,27 @@ export default function MentorSignup() {
     payload.agreementVersionIds = agreementVersionIds;
     console.log(payload)
     mutation.mutate(payload);
+  };
+
+  const handleTempSave = () => {
+    if (!formRef.current) return;
+    const formData = new FormData(formRef.current);
+    const formValues = Object.fromEntries(formData.entries()) as Record<
+      string,
+      string
+    >;
+    delete formValues.token;
+    const draft = {
+      formValues,
+      jobSelections,
+      jobDetails,
+      phoneInputs,
+      emailLocal,
+      domain,
+      savedAt: new Date().toISOString(),
+    };
+    window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    showToast("임시저장되었습니다.", "success");
   };
 
   const handleCheckEmail = () => {
@@ -987,6 +1078,7 @@ export default function MentorSignup() {
               loading={false}
               disabled={false}
               text="임시저장"
+              onClick={handleTempSave}
             />
           </div>
           <div className="w-full sm:w-32">
