@@ -48,6 +48,7 @@ const schema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  console.log("check-phone");
   try {
     const data = await request.json();
     const result = schema.safeParse(data);
@@ -65,7 +66,6 @@ export async function POST(request: NextRequest) {
       where: { phone },
       select: { id: true },
     });
-    console.log(user);
 
     if (user) {
       return NextResponse.json(

@@ -404,6 +404,7 @@ export default function MentorSignup() {
   };
 
   const handlePhoneRequest = async () => {
+    console.log("!")
     if (!formRef.current) return;
     setFieldErrors({});
     const formData = new FormData(formRef.current);
