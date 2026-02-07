@@ -22,6 +22,8 @@ const Input = forwardRef<
         ref={ref}
         className="bg-transparent rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border placeholder:text-neutral-400 px-3 py-2 text-base "
         name={name}
+        autoCapitalize="none"
+        autoCorrect="off"
         {...rest}
       />
       {!hideErrors && (

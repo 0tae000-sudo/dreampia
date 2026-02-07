@@ -151,6 +151,28 @@ export const checkEmail = async (email: string) => {
   return payload;
 };
 
+export const checkPhone = async (userData: {
+  phone1: string;
+  phone2: string;
+  phone3: string;
+}) => {
+  const response = await fetch(buildApiUrl("/www/users/check-phone/"), {
+    method: "POST",
+    body: JSON.stringify(userData),
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload?.message ?? "전화번호 중복확인 실패";
+    const fieldErrors =
+      payload?.error && typeof payload.error === "object"
+        ? (payload.error as Record<string, string[]>)
+        : undefined;
+    throw { message, fieldErrors } satisfies ApiError;
+  }
+  return payload;
+};
+
 export const verifyPhone = async (userData: Record<string, string>) => {
   const response = await fetch(buildApiUrl("/www/users/verifyPhone/"), {
     method: "POST",

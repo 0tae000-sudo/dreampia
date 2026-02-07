@@ -6,7 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import FormButton from "@/components/form-btn";
 import Input from "@/components/input";
-import { checkEmail, createAccount, verifyPhone } from "@/lib/auth/api";
+import { checkEmail, checkPhone, createAccount, verifyPhone } from "@/lib/auth/api";
 import { ApiError } from "@/lib/api-utils";
 import { useToast } from "@/components/toast-provider";
 
@@ -55,6 +55,11 @@ export default function MentorSignup() {
   const [agreementVersionIds, setAgreementVersionIds] = useState<number[]>([]);
   const [phoneTokenSent, setPhoneTokenSent] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
+  const [phoneInputs, setPhoneInputs] = useState({
+    phone1: "",
+    phone2: "",
+    phone3: "",
+  });
   const formRef = useRef<HTMLFormElement>(null);
   const mutation = useMutation<unknown, ApiError, Record<string, any>>({
     mutationFn: createAccount,
@@ -130,6 +135,11 @@ export default function MentorSignup() {
     createEmptyDetails(),
     createEmptyDetails(),
   ]);
+  const isPhoneRequestDisabled =
+    phoneVerifyMutation.isPending ||
+    !phoneInputs.phone1.trim() ||
+    !phoneInputs.phone2.trim() ||
+    !phoneInputs.phone3.trim();
 
   const filteredJobs = useMemo(() => {
     const keyword = jobSearch.trim();
@@ -302,14 +312,35 @@ export default function MentorSignup() {
     emailCheckMutation.mutate(`${localValue}@${domainValue}`);
   };
 
-  const handlePhoneRequest = () => {
+  const handlePhoneRequest = async () => {
     if (!formRef.current) return;
     setFieldErrors({});
     const formData = new FormData(formRef.current);
-    const payload = {
+    const basePayload = {
       phone1: String(formData.get("phone1") ?? ""),
       phone2: String(formData.get("phone2") ?? ""),
       phone3: String(formData.get("phone3") ?? ""),
+    };
+    try {
+      await checkPhone(basePayload);
+    } catch (error) {
+      const apiError = error as ApiError;
+      if (apiError.fieldErrors) {
+        setFieldErrors(apiError.fieldErrors);
+        const firstMessage = Object.values(apiError.fieldErrors)
+          .flat()
+          .find(Boolean);
+        showToast(firstMessage || "입력값을 확인해주세요.", "error");
+        return;
+      }
+      showToast(
+        apiError.message || "전화번호 중복확인에 실패했습니다.",
+        "error",
+      );
+      return;
+    }
+    const payload = {
+      ...basePayload,
       purpose: "id",
     };
     phoneVerifyMutation.mutate(payload);
@@ -384,7 +415,7 @@ export default function MentorSignup() {
           <div className="mt-8 bg-white rounded-2xl shadow-sm border p-6 md:p-8">
             <div className="mb-4">
               <label className="block text-sm font-semibold mb-2">
-                아이디(이메일){" "}
+                아이디(이메일)
                 <span className="text-xs text-gray-500">*추후 변경 불가</span>{" "}
                 <span className="text-red-500">✔</span>
               </label>
@@ -479,6 +510,13 @@ export default function MentorSignup() {
                     errors={fieldErrors.phone1}
                     hideErrors={true}
                     containerClassName="mb-0!"
+                    value={phoneInputs.phone1}
+                    onChange={(event) =>
+                      setPhoneInputs((prev) => ({
+                        ...prev,
+                        phone1: event.target.value,
+                      }))
+                    }
                   />
 
                   <Input
@@ -489,6 +527,13 @@ export default function MentorSignup() {
                     errors={fieldErrors.phone2}
                     hideErrors={true}
                     containerClassName="mb-0!"
+                    value={phoneInputs.phone2}
+                    onChange={(event) =>
+                      setPhoneInputs((prev) => ({
+                        ...prev,
+                        phone2: event.target.value,
+                      }))
+                    }
                   />
                   <Input
                     type="text"
@@ -498,6 +543,13 @@ export default function MentorSignup() {
                     errors={fieldErrors.phone3}
                     hideErrors={true}
                     containerClassName="mb-0!"
+                    value={phoneInputs.phone3}
+                    onChange={(event) =>
+                      setPhoneInputs((prev) => ({
+                        ...prev,
+                        phone3: event.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div className="w-full sm:w-28 flex-1">
@@ -505,7 +557,7 @@ export default function MentorSignup() {
                     type="button"
                     className="cursor-pointer bg-orange-600 text-amber-50 rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
                     onClick={handlePhoneRequest}
-                    disabled={phoneVerifyMutation.isPending}
+                    disabled={isPhoneRequestDisabled}
                   >
                     {phoneTokenSent ? "인증번호 재발송" : "인증요청"}
                   </button>
