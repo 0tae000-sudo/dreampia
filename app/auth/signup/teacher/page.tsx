@@ -7,7 +7,12 @@ import FormButton from "@/components/form-btn";
 import Input from "@/components/input";
 import DaumPostcodeEmbed from "react-daum-postcode";
 import { useMutation } from "@tanstack/react-query";
-import { checkEmail, checkPhone, createAccount, verifyPhone } from "@/lib/auth/api";
+import {
+  checkEmail,
+  checkPhone,
+  createAccount,
+  verifyPhone,
+} from "@/lib/auth/api";
 import { ApiError } from "@/lib/api-utils";
 import { PASSWORD_MIN_LENGTH } from "@/lib/constants";
 import { useToast } from "@/components/toast-provider";
@@ -58,7 +63,11 @@ export default function TeacherSignup() {
       alert(error.message || "이메일 중복확인에 실패했습니다.");
     },
   });
-  const phoneVerifyMutation = useMutation<unknown, ApiError, Record<string, string>>({
+  const phoneVerifyMutation = useMutation<
+    unknown,
+    ApiError,
+    Record<string, string>
+  >({
     mutationFn: (payload) => verifyPhone(payload),
     onSuccess: (_, variables) => {
       const tokenValue = String(variables?.token ?? "").trim();
@@ -101,7 +110,8 @@ export default function TeacherSignup() {
     if (emailLocal && domainValue) {
       payload.email = `${emailLocal}@${domainValue}`;
     }
-    (payload as Record<string, unknown>).agreementVersionIds = agreementVersionIds;
+    (payload as Record<string, unknown>).agreementVersionIds =
+      agreementVersionIds;
     mutation.mutate(payload as Record<string, any>);
   };
 
@@ -258,8 +268,8 @@ export default function TeacherSignup() {
 
       <main className="max-w-3xl mx-auto px-6 py-10">
         <div className="text-center">
-        <span className="inline-block bg-[#e35b2f] text-white text-sm font-bold px-10 py-2 rounded">
-        - 회원정보입력 -
+          <span className="inline-block bg-[#e35b2f] text-white text-sm font-bold px-10 py-2 rounded">
+            - 회원정보입력 -
           </span>
         </div>
 
@@ -310,7 +320,7 @@ export default function TeacherSignup() {
                     value={postcode}
                     onChange={(event) => setPostcode(event.target.value)}
                     errors={fieldErrors.postcode}
-                    readOnly={true} 
+                    readOnly={true}
                     onClick={() => setIsAddressSearchOpen(true)}
                     containerClassName="mb-0!"
                   />
