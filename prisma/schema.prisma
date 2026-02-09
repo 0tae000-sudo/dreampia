@@ -152,8 +152,76 @@ model Job {
   updated_at DateTime @updatedAt
 }
 
+model EventApplication {
+  id                      Int                   @id @default(autoincrement())
+  schoolName              String
+  schoolLevel             SchoolLevel
+  postcode                String
+  address                 String
+  detailAddress           String
+  managerName             String
+  managerPosition         String
+  managerPhone            String
+  managerEmail            String
+  adminName               String
+  adminPosition           String
+  adminPhone              String
+  adminEmail              String
+  eventName               String
+  programType             ProgramType
+  eventDate               DateTime
+  targetGrades            Json
+  totalStudents           Int
+  studentChangeType       StudentChangeType
+  mentorRequestCount      Int
+  mentorPreference        String?
+  providedItems           Json
+  expectedQuote           String?
+  inquiry                 String?
+  timeSlots               EventTimeSlot[]
+  created_at              DateTime              @default(now())
+  updated_at              DateTime              @updatedAt
+}
+
+model EventTimeSlot {
+  id              Int               @id @default(autoincrement())
+  application     EventApplication  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId   Int
+  period          Int
+  startHour       Int
+  startMinute     Int
+  endHour         Int
+  endMinute       Int
+}
+
 enum AgreementRole {
   ALL
   TEACHER
   MENTOR
 }
+
+enum SchoolLevel {
+  ELEMENTARY
+  MIDDLE
+  HIGH
+  INSTITUTE
+}
+
+enum ProgramType {
+  JOB_LECTURE
+  JOB_EXPERIENCE
+  STUDY_CONCERT
+  JOB_FAIR
+  CAREER_CAMP
+  NEW_INDUSTRY
+  JUNGRANG_ONE_DAY
+  CAREER_CONCERT
+  CAREER_PLAY
+  DIGITAL_CAMP
+}
+
+enum StudentChangeType {
+  CHANGE_PER_PERIOD
+  NO_CHANGE
+}
+
