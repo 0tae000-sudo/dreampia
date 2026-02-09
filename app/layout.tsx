@@ -66,6 +66,16 @@ export default async function RootLayout({
                   </Link>
                 </div>
               )}
+              {isLoggedIn && (
+                <div className="flex space-x-4 text-sm font-bold text-gray-700">
+                  <Link
+                    href="/auth/logout"
+                    className="flex items-center hover:text-blue-600"
+                  >
+                    로그아웃
+                  </Link>
+                </div>
+              )}
             </header>
 
             <main className="flex-1">{children}</main>

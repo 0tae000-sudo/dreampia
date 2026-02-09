@@ -72,11 +72,13 @@ const MarsLayout = () => {
             </div>
           </GridItem>
 
-          <GridItem title="행사신청" bgColor="bg-[#4d7eb3]">
-            <div className="absolute right-4 bottom-4 text-6xl opacity-30">
-              🏫
-            </div>
-          </GridItem>
+          <Link href="/event/apply">
+            <GridItem title="행사신청" bgColor="bg-[#4d7eb3]">
+              <div className="absolute right-4 bottom-4 text-6xl opacity-30">
+                🏫
+              </div>
+            </GridItem>
+          </Link>
           <Link href="/content/recruit">
             <GridItem title="멘토모집" bgColor="bg-[#004a8d]">
               <div className="absolute right-4 bottom-4 text-6xl opacity-30">
