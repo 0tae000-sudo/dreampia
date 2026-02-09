@@ -29,6 +29,7 @@ export default function Login() {
       setFormError(null);
       showToast("로그인에 성공했습니다.", "success");
       router.push("/profile/");
+      router.refresh();
     },
     onError: (error) => {
       console.log("로그인 에러", error);

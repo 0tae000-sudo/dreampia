@@ -55,6 +55,7 @@ export default function Profile() {
     try {
       await logoutUser();
       router.replace("/");
+      router.refresh();
     } catch (error) {
       const message =
         typeof error === "object" && error !== null && "message" in error

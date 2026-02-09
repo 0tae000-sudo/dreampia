@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import QueryProvider from "@/components/QueryProvider";
 import RouteGuard from "@/components/route-guard";
 import ToastProvider from "@/components/toast-provider";
@@ -17,11 +18,19 @@ export const metadata: Metadata = {
   description: "MARS",
 };
 
-export default function RootLayout({
+// 로그인 상태(쿠키)에 따라 헤더가 바뀌므로 동적 렌더링
+export const dynamic = "force-dynamic";
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const isLoggedIn = Boolean(
+    cookieStore.get("dreampia")?.value ||
+    cookieStore.get("dreampia_session")?.value,
+  );
   return (
     <html lang="ko">
       {/* pt-[env(safe-area-inset-top)]: 상단 상태바/노치 겹침 방지
@@ -41,20 +50,22 @@ export default function RootLayout({
                   <span className="text-blue-500 mr-2">●</span> MARS
                 </Link>
               </div>
-              <div className="flex space-x-4 text-sm font-bold text-gray-700">
-                <Link
-                  href="/auth/login"
-                  className="flex items-center hover:text-blue-600"
-                >
-                  로그인
-                </Link>
-                <Link
-                  href="/auth/signup"
-                  className="flex items-center text-red-500 hover:text-red-700"
-                >
-                  회원가입
-                </Link>
-              </div>
+              {!isLoggedIn && (
+                <div className="flex space-x-4 text-sm font-bold text-gray-700">
+                  <Link
+                    href="/auth/login"
+                    className="flex items-center hover:text-blue-600"
+                  >
+                    로그인
+                  </Link>
+                  <Link
+                    href="/auth/signup"
+                    className="flex items-center text-red-500 hover:text-red-700"
+                  >
+                    회원가입
+                  </Link>
+                </div>
+              )}
             </header>
 
             <main className="flex-1">{children}</main>
@@ -64,7 +75,11 @@ export default function RootLayout({
               <div className="max-w-2xl mx-auto space-y-6">
                 {/* 로고 영역 */}
                 <div className="flex justify-center">
-                  <img src="/mars-logo.png" alt="MARS" className="h-16 w-auto" />
+                  <img
+                    src="/mars-logo.png"
+                    alt="MARS"
+                    className="h-16 w-auto"
+                  />
                 </div>
 
                 {/* 약관 링크 */}
@@ -75,12 +90,16 @@ export default function RootLayout({
 
                 {/* 사업자 정보 */}
                 <div className="space-y-1 opacity-80 leading-relaxed text-xs sm:text-sm">
-                  <p>(주) 달꿈 | 대표 : 이수인 | 사업자등록번호 : 215-87-96093</p>
                   <p>
-                    주소 : 서울특별시 서초구 양재천로 17길 22 두원빌딩 3층 | TEL :
-                    02-514-1110
+                    (주) 달꿈 | 대표 : 이수인 | 사업자등록번호 : 215-87-96093
                   </p>
-                  <p>E-mail : jinro@dalkkum.com | 개인정보보호 책임자 : 이진수</p>
+                  <p>
+                    주소 : 서울특별시 서초구 양재천로 17길 22 두원빌딩 3층 | TEL
+                    : 02-514-1110
+                  </p>
+                  <p>
+                    E-mail : jinro@dalkkum.com | 개인정보보호 책임자 : 이진수
+                  </p>
                 </div>
 
                 {/* 카피라이트 */}
