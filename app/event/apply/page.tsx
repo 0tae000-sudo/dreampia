@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import DaumPostcodeEmbed from "react-daum-postcode";
 import { getCurrentUser } from "@/lib/auth/api";
 import Input from "@/components/input";
+import { ApiError } from "@/lib/api-utils";
 
 type User = {
   isTeacher: boolean | null;
@@ -14,6 +15,7 @@ type User = {
 export default function EventApplyPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [isAddressSearchOpen, setIsAddressSearchOpen] = useState(false);
   const [postcode, setPostcode] = useState("");
   const [address, setAddress] = useState("");
@@ -103,6 +105,73 @@ export default function EventApplyPage() {
     requestAnimationFrame(() => detailAddressRef.current?.focus());
   };
 
+  const renderErrors = (name: string) => {
+    const errors = fieldErrors[name];
+    if (!errors?.length) return null;
+    return errors.map((error, index) => (
+      <span key={`${name}-${index}`} className="text-red-500 font-medium">
+        {error}
+      </span>
+    ));
+  };
+
+  const renderGroupErrors = (names: string[]) => {
+    const items = names.flatMap((name) =>
+      (fieldErrors[name] ?? []).map((error, index) => ({
+        key: `${name}-${index}`,
+        error,
+      })),
+    );
+    if (!items.length) return null;
+    return items.map((item) => (
+      <span key={item.key} className="text-red-500 font-medium">
+        {item.error}
+      </span>
+    ));
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFieldErrors({});
+    const formData = new FormData(event.currentTarget);
+    const payload = Object.fromEntries(formData.entries()) as Record<
+      string,
+      string
+    >;
+
+    try {
+      const response = await fetch("/www/events/apply/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...payload,
+          postcode,
+          address,
+          targetGrades: selectedGrades,
+          providedItems,
+          timeSlots,
+        }),
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        const message = result?.message ?? "접수에 실패했습니다.";
+        const fieldErr =
+          result?.error && typeof result.error === "object"
+            ? (result.error as Record<string, string[]>)
+            : undefined;
+        throw { message, fieldErrors: fieldErr } satisfies ApiError;
+      }
+      alert("행사 접수가 완료되었습니다.");
+    } catch (error) {
+      const apiError = error as ApiError;
+      if (apiError.fieldErrors) {
+        setFieldErrors(apiError.fieldErrors);
+        return;
+      }
+      alert(apiError.message || "접수에 실패했습니다.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f6f6f6] text-gray-900">
       <section className="relative h-[200px] md:h-[240px] bg-[#3b4356] overflow-hidden">
@@ -138,7 +207,7 @@ export default function EventApplyPage() {
             </p>
           </div>
 
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <section className="border rounded-lg overflow-hidden">
               <div className="bg-gray-100 px-4 py-2 font-bold text-sm">
                 학교 정보
@@ -149,19 +218,23 @@ export default function EventApplyPage() {
                   name="schoolName"
                   placeholder="학교(기관)명"
                   required={true}
+                  errors={fieldErrors.schoolName}
                 />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <select
-                    name="schoolLevel"
-                    required
-                    className="bg-transparent rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
-                  >
-                    <option value="">학교급 선택</option>
-                    <option value="ELEMENTARY">초등</option>
-                    <option value="MIDDLE">중등</option>
-                    <option value="HIGH">고등</option>
-                    <option value="INSTITUTE">기관</option>
-                  </select>
+                  <div className="flex flex-col gap-1">
+                    <select
+                      name="schoolLevel"
+                      required
+                      className="bg-transparent rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
+                    >
+                      <option value="">학교급 선택</option>
+                      <option value="ELEMENTARY">초등</option>
+                      <option value="MIDDLE">중등</option>
+                      <option value="HIGH">고등</option>
+                      <option value="INSTITUTE">기관</option>
+                    </select>
+                    {renderErrors("schoolLevel")}
+                  </div>
                   <Input
                     type="text"
                     name="postcode"
@@ -172,6 +245,7 @@ export default function EventApplyPage() {
                     readOnly={true}
                     onClick={() => setIsAddressSearchOpen(true)}
                     containerClassName="mb-0!"
+                    errors={fieldErrors.postcode}
                   />
                 </div>
                 <Input
@@ -183,6 +257,7 @@ export default function EventApplyPage() {
                   onChange={(event) => setAddress(event.target.value)}
                   readOnly={true}
                   onClick={() => setIsAddressSearchOpen(true)}
+                  errors={fieldErrors.address}
                 />
                 <Input
                   type="text"
@@ -190,6 +265,7 @@ export default function EventApplyPage() {
                   placeholder="상세주소"
                   required={true}
                   ref={detailAddressRef}
+                  errors={fieldErrors.detailAddress}
                 />
               </div>
             </section>
@@ -204,24 +280,28 @@ export default function EventApplyPage() {
                   name="managerName"
                   placeholder="담당자 이름"
                   required={true}
+                  errors={fieldErrors.managerName}
                 />
                 <Input
                   type="text"
                   name="managerPosition"
                   placeholder="직위"
                   required={true}
+                  errors={fieldErrors.managerPosition}
                 />
                 <Input
                   type="text"
                   name="managerPhone"
                   placeholder="연락처"
                   required={true}
+                  errors={fieldErrors.managerPhone}
                 />
                 <Input
                   type="email"
                   name="managerEmail"
                   placeholder="이메일 주소"
                   required={true}
+                  errors={fieldErrors.managerEmail}
                 />
               </div>
             </section>
@@ -236,24 +316,28 @@ export default function EventApplyPage() {
                   name="adminName"
                   placeholder="행정실 이름"
                   required={true}
+                  errors={fieldErrors.adminName}
                 />
                 <Input
                   type="text"
                   name="adminPosition"
                   placeholder="직위"
                   required={true}
+                  errors={fieldErrors.adminPosition}
                 />
                 <Input
                   type="text"
                   name="adminPhone"
                   placeholder="연락처"
                   required={true}
+                  errors={fieldErrors.adminPhone}
                 />
                 <Input
                   type="email"
                   name="adminEmail"
                   placeholder="이메일 주소"
                   required={true}
+                  errors={fieldErrors.adminEmail}
                 />
               </div>
             </section>
@@ -268,26 +352,35 @@ export default function EventApplyPage() {
                   name="eventName"
                   placeholder="행사명"
                   required={true}
+                  errors={fieldErrors.eventName}
                 />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <select
-                    name="programType"
-                    required
-                    className="bg-transparent rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
-                  >
-                    <option value="">프로그램 종류 선택</option>
-                    <option value="JOB_LECTURE">직업특강</option>
-                    <option value="JOB_EXPERIENCE">직업체험</option>
-                    <option value="STUDY_CONCERT">스터디콘서트</option>
-                    <option value="JOB_FAIR">직업박람회</option>
-                    <option value="CAREER_CAMP">진로캠프</option>
-                    <option value="NEW_INDUSTRY">신산업미래직업</option>
-                    <option value="JUNGRANG_ONE_DAY">중랑 원데이</option>
-                    <option value="CAREER_CONCERT">진로콘서트</option>
-                    <option value="CAREER_PLAY">진로연극</option>
-                    <option value="DIGITAL_CAMP">디지털 탬프</option>
-                  </select>
-                  <Input type="date" name="eventDate" required={true} />
+                  <div className="flex flex-col gap-1">
+                    <select
+                      name="programType"
+                      required
+                      className="bg-transparent rounded-md w-full h-10 focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
+                    >
+                      <option value="">프로그램 종류 선택</option>
+                      <option value="JOB_LECTURE">직업특강</option>
+                      <option value="JOB_EXPERIENCE">직업체험</option>
+                      <option value="STUDY_CONCERT">스터디콘서트</option>
+                      <option value="JOB_FAIR">직업박람회</option>
+                      <option value="CAREER_CAMP">진로캠프</option>
+                      <option value="NEW_INDUSTRY">신산업미래직업</option>
+                      <option value="JUNGRANG_ONE_DAY">중랑 원데이</option>
+                      <option value="CAREER_CONCERT">진로콘서트</option>
+                      <option value="CAREER_PLAY">진로연극</option>
+                      <option value="DIGITAL_CAMP">디지털 탬프</option>
+                    </select>
+                    {renderErrors("programType")}
+                  </div>
+                  <Input
+                    type="date"
+                    name="eventDate"
+                    required={true}
+                    errors={fieldErrors.eventDate}
+                  />
                 </div>
 
                 <div>
@@ -313,6 +406,9 @@ export default function EventApplyPage() {
                       </label>
                     ))}
                   </div>
+                  <div className="mt-2 flex flex-col gap-1">
+                    {renderErrors("targetGrades")}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -322,6 +418,7 @@ export default function EventApplyPage() {
                     placeholder="총참여학생수"
                     required={true}
                     min={0}
+                    errors={fieldErrors.totalStudents}
                   />
                   <div className="flex flex-col gap-2">
                     <p className="text-sm font-semibold">차시당 학생변경</p>
@@ -341,6 +438,9 @@ export default function EventApplyPage() {
                       />
                       변경없음
                     </label>
+                    <div className="flex flex-col gap-1">
+                      {renderErrors("studentChangeType")}
+                    </div>
                   </div>
                 </div>
 
@@ -494,6 +594,9 @@ export default function EventApplyPage() {
                       </div>
                     </div>
                   ))}
+                  <div className="flex flex-col gap-1">
+                    {renderErrors("timeSlots")}
+                  </div>
                 </div>
               </div>
             </section>
@@ -508,11 +611,13 @@ export default function EventApplyPage() {
                   name="mentorRequestCount"
                   placeholder="요청 멘토 수"
                   required={true}
+                  errors={fieldErrors.mentorRequestCount}
                 />
                 <Input
                   type="text"
                   name="mentorPreference"
                   placeholder="멘토대기실"
+                  errors={fieldErrors.mentorPreference}
                 />
               </div>
             </section>
@@ -550,6 +655,7 @@ export default function EventApplyPage() {
                   type="text"
                   name="expectedQuote"
                   placeholder="예상 견적"
+                  errors={fieldErrors.expectedQuote}
                 />
                 <div>
                   <label className="block text-sm font-semibold mb-2">
@@ -560,6 +666,9 @@ export default function EventApplyPage() {
                     rows={4}
                     className="bg-transparent rounded-md w-full focus:outline-none ring-2 focus:ring-4 transition ring-neutral-200 focus:ring-[#e35b2f]/40 border px-3 py-2 text-base"
                   />
+                  <div className="mt-2 flex flex-col gap-1">
+                    {renderErrors("inquiry")}
+                  </div>
                 </div>
               </div>
             </section>
