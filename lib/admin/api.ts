@@ -79,6 +79,55 @@ export const getNotices = async (
   return data;
 };
 
+export type UpdateNoticePayload = CreateNoticePayload;
+
+export const getNotice = async (id: number): Promise<{ success: true; data: Notice }> => {
+  const response = await fetch(buildApiUrl(`/www/admin/notices/${id}`), {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      data?.error && typeof data.error === "string"
+        ? data.error
+        : "공지를 불러오는데 실패했습니다.";
+    throw { message } satisfies ApiError;
+  }
+
+  return data;
+};
+
+export const updateNotice = async (
+  id: number,
+  payload: UpdateNoticePayload,
+) => {
+  const response = await fetch(buildApiUrl(`/www/admin/notices/${id}`), {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      data?.error && typeof data.error === "string"
+        ? data.error
+        : "공지사항 수정에 실패했습니다.";
+    const fieldErrors =
+      data?.error && typeof data.error === "object"
+        ? (data.error as Record<string, string[]>)
+        : undefined;
+    throw { message, fieldErrors } satisfies ApiError;
+  }
+
+  return data;
+};
+
 export const createNotice = async (payload: CreateNoticePayload) => {
   const response = await fetch(buildApiUrl("/www/admin/notices"), {
     method: "POST",
