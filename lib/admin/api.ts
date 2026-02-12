@@ -128,6 +128,25 @@ export const updateNotice = async (
   return data;
 };
 
+export const deleteNotice = async (id: number) => {
+  const response = await fetch(buildApiUrl(`/www/admin/notices/${id}`), {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      data?.error && typeof data.error === "string"
+        ? data.error
+        : "공지사항 삭제에 실패했습니다.";
+    throw { message } satisfies ApiError;
+  }
+
+  return data;
+};
+
 export const createNotice = async (payload: CreateNoticePayload) => {
   const response = await fetch(buildApiUrl("/www/admin/notices"), {
     method: "POST",

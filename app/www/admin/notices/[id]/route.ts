@@ -161,3 +161,53 @@ export async function PATCH(
     );
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const authError = await checkAdmin();
+    if (authError) {
+      return NextResponse.json(
+        { success: false, error: authError.error },
+        {
+          status: authError.status,
+          headers: getCorsHeaders(request.headers.get("origin")),
+        },
+      );
+    }
+
+    const { id } = await params;
+    const noticeId = parseInt(id, 10);
+    if (Number.isNaN(noticeId)) {
+      return NextResponse.json(
+        { success: false, error: "유효하지 않은 공지 ID입니다." },
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
+      );
+    }
+
+    const notice = await db.notice.findUnique({ where: { id: noticeId } });
+    if (!notice) {
+      return NextResponse.json(
+        { success: false, error: "공지를 찾을 수 없습니다." },
+        { status: 404, headers: getCorsHeaders(request.headers.get("origin")) },
+      );
+    }
+
+    await db.notice.delete({
+      where: { id: noticeId },
+    });
+
+    return NextResponse.json(
+      { success: true },
+      { headers: getCorsHeaders(request.headers.get("origin")) },
+    );
+  } catch (error) {
+    console.error("공지사항 삭제 API 오류:", error);
+    return NextResponse.json(
+      { success: false, error: "공지사항 삭제에 실패했습니다." },
+      { status: 500, headers: getCorsHeaders(request.headers.get("origin")) },
+    );
+  }
+}

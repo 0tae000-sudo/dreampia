@@ -2,18 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getNotices, type Notice } from "@/lib/admin/api";
-import { Pencil, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { getNotices, deleteNotice, type Notice } from "@/lib/admin/api";
+import { useToast } from "@/components/toast-provider";
+import { Pencil, Plus, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 
 const PAGE_SIZE = 15;
 
 export default function AdminNoticePage() {
+  const { showToast } = useToast();
   const [notices, setNotices] = useState<Notice[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -26,6 +30,9 @@ export default function AdminNoticePage() {
           setNotices(res.data);
           setTotal(res.total);
           setTotalPages(res.totalPages);
+          if (res.data.length === 0 && res.totalPages > 0 && page > 1) {
+            setPage((p) => Math.max(1, p - 1));
+          }
         }
       } catch (e) {
         if (isMounted) {
@@ -43,13 +50,32 @@ export default function AdminNoticePage() {
     return () => {
       isMounted = false;
     };
-  }, [page]);
+  }, [page, refreshKey]);
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toISOString().slice(0, 10);
   };
 
   const startNo = total - (page - 1) * PAGE_SIZE;
+
+  const handleDelete = async (noticeId: number, title: string) => {
+    if (!confirm(`"${title}" 공지사항을 삭제하시겠습니까?`)) return;
+    setDeletingId(noticeId);
+    try {
+      await deleteNotice(noticeId);
+      showToast("공지사항이 삭제되었습니다.", "success");
+      setRefreshKey((k) => k + 1);
+    } catch (e) {
+      showToast(
+        typeof e === "object" && e !== null && "message" in e
+          ? String((e as { message: string }).message)
+          : "공지사항 삭제에 실패했습니다.",
+        "error",
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const getPageNumbers = () => {
     const maxVisible = 5;
@@ -111,8 +137,8 @@ export default function AdminNoticePage() {
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">
                     작성일
                   </th>
-                  <th className="w-20 px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-white">
-                    수정
+                  <th className="w-28 px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-white">
+                    수정 / 삭제
                   </th>
                 </tr>
               </thead>
@@ -162,13 +188,24 @@ export default function AdminNoticePage() {
                         {formatDate(notice.created_at)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-right">
-                        <Link
-                          href={`/admin/notice/${notice.id}/edit`}
-                          className="inline-flex items-center gap-1 rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
-                        >
-                          <Pencil size={14} />
-                          수정
-                        </Link>
+                        <div className="flex items-center justify-end gap-1">
+                          <Link
+                            href={`/admin/notice/${notice.id}/edit`}
+                            className="inline-flex items-center gap-1 rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                          >
+                            <Pencil size={14} />
+                            수정
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(notice.id, notice.title)}
+                            disabled={deletingId === notice.id}
+                            className="inline-flex items-center gap-1 rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                          >
+                            <Trash2 size={14} />
+                            삭제
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
