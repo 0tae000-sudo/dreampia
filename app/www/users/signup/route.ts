@@ -46,7 +46,6 @@ const checkUniquePhone = async (phone: string) => {
 };
 
 export async function GET(request: NextRequest) {
-  console.log("GET Request received");
   return NextResponse.json(
     { ok: true },
     { headers: getCorsHeaders(request.headers.get("origin")) }, // 헤더 추가
@@ -325,7 +324,6 @@ const parseAgreementVersionIds = (value: unknown) => {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("POST Request received");
     const data = (await request.json()) as Record<string, any>;
     const isTeacherSignup =
       typeof data.teacherName === "string" && data.teacherName.trim() !== "";
@@ -463,7 +461,6 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.log(error);
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },
       { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },

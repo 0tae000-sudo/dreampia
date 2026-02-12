@@ -6,7 +6,12 @@ import { useMutation } from "@tanstack/react-query";
 
 import FormButton from "@/components/form-btn";
 import Input from "@/components/input";
-import { checkEmail, checkPhone, createAccount, verifyPhone } from "@/lib/auth/api";
+import {
+  checkEmail,
+  checkPhone,
+  createAccount,
+  verifyPhone,
+} from "@/lib/auth/api";
 import { ApiError } from "@/lib/api-utils";
 import { useToast } from "@/components/toast-provider";
 
@@ -198,9 +203,7 @@ export default function MentorSignup() {
         phone3: parsed.phoneInputs?.phone3 ?? parsed.formValues?.phone3 ?? "",
       };
       setPhoneInputs(nextPhoneInputs);
-      setEmailLocal(
-        parsed.emailLocal ?? parsed.formValues?.email ?? "",
-      );
+      setEmailLocal(parsed.emailLocal ?? parsed.formValues?.email ?? "");
       setDomain(parsed.domain ?? parsed.formValues?.domain ?? "");
 
       const formValues = parsed.formValues ?? {};
@@ -340,7 +343,6 @@ export default function MentorSignup() {
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    console.log(agreementVersionIds);
     event.preventDefault();
     setFieldErrors({});
     if (!phoneVerified) {
@@ -368,7 +370,6 @@ export default function MentorSignup() {
       }))
       .filter((job) => typeof job.title === "string" && job.title.trim());
     payload.agreementVersionIds = agreementVersionIds;
-    console.log(payload)
     mutation.mutate(payload);
   };
 
@@ -404,7 +405,6 @@ export default function MentorSignup() {
   };
 
   const handlePhoneRequest = async () => {
-    console.log("!")
     if (!formRef.current) return;
     setFieldErrors({});
     const formData = new FormData(formRef.current);
@@ -498,7 +498,7 @@ export default function MentorSignup() {
 
       <main className="max-w-3xl mx-auto px-6 py-10">
         <div className="text-center">
-        <span className="inline-block bg-[#e35b2f] text-white text-sm font-bold px-10 py-2 rounded">
+          <span className="inline-block bg-[#e35b2f] text-white text-sm font-bold px-10 py-2 rounded">
             - 회원정보입력 -
           </span>
         </div>
@@ -508,7 +508,9 @@ export default function MentorSignup() {
             <div className="mb-4">
               <label className="block text-sm font-semibold mb-2">
                 아이디(이메일)
-                <span className="text-xs text-gray-500">*추후 변경 불가</span>{" "}
+                <span className="text-xs text-gray-500">
+                  *추후 변경 불가
+                </span>{" "}
                 <span className="text-red-500">✔</span>
               </label>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -559,7 +561,6 @@ export default function MentorSignup() {
                   required={true}
                   errors={fieldErrors.password}
                   containerClassName="mb-0! lg:mb-4!"
-                  
                 />
                 <Input
                   type="password"
@@ -747,349 +748,364 @@ export default function MentorSignup() {
           </div>
 
           <div className="mt-6 bg-[#eef2ff] border border-[#d9e1ff] rounded-md px-4 py-3 text-sm text-gray-700">
-          <span className="text-red-500 font-bold">!</span>{" "}
-          직업멘토링/직업체험을 위한 멘토님의 직업을 등록해주세요. (1개 필수,
-          최대 3개 등록 가능)
+            <span className="text-red-500 font-bold">!</span>{" "}
+            직업멘토링/직업체험을 위한 멘토님의 직업을 등록해주세요. (1개 필수,
+            최대 3개 등록 가능)
           </div>
 
           <div className="mt-6 space-y-4">
-          {[1, 2, 3].map((idx) => {
-            const jobIndex = idx - 1;
-            const selectedJob = jobSelections[jobIndex];
-            const details = jobDetails[jobIndex];
-            return (
-            <div key={idx} className="bg-white rounded-md border p-4">
-              <p className="font-bold text-sm mb-2">
-                직업{idx} <span className="text-red-500">✔</span>
-              </p>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="flex-1">
-                  <Input
-                    type="text"
-                    name={`job${idx}`}
-                    placeholder="직업검색"
-                    required={idx === 1}
-                    readOnly={true}
-                    value={selectedJob}
-                    onClick={() => openJobModal(jobIndex)}
-                    containerClassName="mb-0!"
-                  />
-                </div>
-                <div className="w-full sm:w-24">
-                  <FormButton
-                    type="button"
-                    loading={false}
-                    disabled={false}
-                    text="검색"
-                    onClick={() => openJobModal(jobIndex)}
-                  />
-                </div>
-              </div>
-              {selectedJob && (
-                <div className="mt-4 space-y-4">
-                  <div className="bg-[#eef2ff] border border-[#d9e1ff] rounded-md px-4 py-3">
-                    <p className="font-bold text-sm">경력사항</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      <span className="text-red-500">근무기간(ex. 2002.02 ~ 2004.03)</span>, 담당업무, 회사명 및 부서를 적어주세요.
-                    </p>
-                    <div className="mt-3 space-y-3">
-                      {details.career.map((line, lineIndex) => (
-                        <div
-                          key={`career-${lineIndex}`}
-                          className="grid grid-cols-1 sm:grid-cols-3 gap-2"
-                        >
-                          <Input
-                            type="text"
-                            name={`careerPeriod-${idx}-${lineIndex}`}
-                            placeholder="근무기간"
-                            value={line.period}
-                            onChange={(event) =>
-                              updateDetail(
-                                jobIndex,
-                                "career",
-                                lineIndex,
-                                "period",
-                                event.target.value,
-                              )
-                            }
-                          />
-                          <Input
-                            type="text"
-                            name={`careerRole-${idx}-${lineIndex}`}
-                            placeholder="담당업무"
-                            value={line.role}
-                            onChange={(event) =>
-                              updateDetail(
-                                jobIndex,
-                                "career",
-                                lineIndex,
-                                "role",
-                                event.target.value,
-                              )
-                            }
-                          />
-                          <Input
-                            type="text"
-                            name={`careerCompany-${idx}-${lineIndex}`}
-                            placeholder="회사명 및 부서"
-                            value={line.company}
-                            onChange={(event) =>
-                              updateDetail(
-                                jobIndex,
-                                "career",
-                                lineIndex,
-                                "company",
-                                event.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                      ))}
+            {[1, 2, 3].map((idx) => {
+              const jobIndex = idx - 1;
+              const selectedJob = jobSelections[jobIndex];
+              const details = jobDetails[jobIndex];
+              return (
+                <div key={idx} className="bg-white rounded-md border p-4">
+                  <p className="font-bold text-sm mb-2">
+                    직업{idx} <span className="text-red-500">✔</span>
+                  </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <div className="flex-1">
+                      <Input
+                        type="text"
+                        name={`job${idx}`}
+                        placeholder="직업검색"
+                        required={idx === 1}
+                        readOnly={true}
+                        value={selectedJob}
+                        onClick={() => openJobModal(jobIndex)}
+                        containerClassName="mb-0!"
+                      />
                     </div>
-                    <div className="mt-3 w-full sm:w-28">
+                    <div className="w-full sm:w-24">
                       <FormButton
                         type="button"
                         loading={false}
                         disabled={false}
-                        text="라인추가"
-                        onClick={() => addDetailLine(jobIndex, "career")}
+                        text="검색"
+                        onClick={() => openJobModal(jobIndex)}
                       />
                     </div>
                   </div>
+                  {selectedJob && (
+                    <div className="mt-4 space-y-4">
+                      <div className="bg-[#eef2ff] border border-[#d9e1ff] rounded-md px-4 py-3">
+                        <p className="font-bold text-sm">경력사항</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          <span className="text-red-500">
+                            근무기간(ex. 2002.02 ~ 2004.03)
+                          </span>
+                          , 담당업무, 회사명 및 부서를 적어주세요.
+                        </p>
+                        <div className="mt-3 space-y-3">
+                          {details.career.map((line, lineIndex) => (
+                            <div
+                              key={`career-${lineIndex}`}
+                              className="grid grid-cols-1 sm:grid-cols-3 gap-2"
+                            >
+                              <Input
+                                type="text"
+                                name={`careerPeriod-${idx}-${lineIndex}`}
+                                placeholder="근무기간"
+                                value={line.period}
+                                onChange={(event) =>
+                                  updateDetail(
+                                    jobIndex,
+                                    "career",
+                                    lineIndex,
+                                    "period",
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                              <Input
+                                type="text"
+                                name={`careerRole-${idx}-${lineIndex}`}
+                                placeholder="담당업무"
+                                value={line.role}
+                                onChange={(event) =>
+                                  updateDetail(
+                                    jobIndex,
+                                    "career",
+                                    lineIndex,
+                                    "role",
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                              <Input
+                                type="text"
+                                name={`careerCompany-${idx}-${lineIndex}`}
+                                placeholder="회사명 및 부서"
+                                value={line.company}
+                                onChange={(event) =>
+                                  updateDetail(
+                                    jobIndex,
+                                    "career",
+                                    lineIndex,
+                                    "company",
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-3 w-full sm:w-28">
+                          <FormButton
+                            type="button"
+                            loading={false}
+                            disabled={false}
+                            text="라인추가"
+                            onClick={() => addDetailLine(jobIndex, "career")}
+                          />
+                        </div>
+                      </div>
 
-                  <div className="bg-[#eef2ff] border border-[#d9e1ff] rounded-md px-4 py-3">
-                    <p className="font-bold text-sm">자격증</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      <span className="text-red-500">발급일(ex. 2002.02.03)</span>, 자격증명, 발급기관을 적어주세요.
-                    </p>
-                    <div className="mt-3 space-y-3">
-                      {details.certificates.map((line, lineIndex) => (
-                        <div
-                          key={`cert-${lineIndex}`}
-                          className="grid grid-cols-1 sm:grid-cols-3 gap-2"
-                        >
-                          <Input
-                            type="text"
-                            name={`certDate-${idx}-${lineIndex}`}
-                            placeholder="발급일"
-                            value={line.date}
-                            onChange={(event) =>
-                              updateDetail(
-                                jobIndex,
-                                "certificates",
-                                lineIndex,
-                                "date",
-                                event.target.value,
-                              )
-                            }
-                          />
-                          <Input
-                            type="text"
-                            name={`certName-${idx}-${lineIndex}`}
-                            placeholder="자격증명"
-                            value={line.name}
-                            onChange={(event) =>
-                              updateDetail(
-                                jobIndex,
-                                "certificates",
-                                lineIndex,
-                                "name",
-                                event.target.value,
-                              )
-                            }
-                          />
-                          <Input
-                            type="text"
-                            name={`certIssuer-${idx}-${lineIndex}`}
-                            placeholder="발급기관"
-                            value={line.issuer}
-                            onChange={(event) =>
-                              updateDetail(
-                                jobIndex,
-                                "certificates",
-                                lineIndex,
-                                "issuer",
-                                event.target.value,
-                              )
+                      <div className="bg-[#eef2ff] border border-[#d9e1ff] rounded-md px-4 py-3">
+                        <p className="font-bold text-sm">자격증</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          <span className="text-red-500">
+                            발급일(ex. 2002.02.03)
+                          </span>
+                          , 자격증명, 발급기관을 적어주세요.
+                        </p>
+                        <div className="mt-3 space-y-3">
+                          {details.certificates.map((line, lineIndex) => (
+                            <div
+                              key={`cert-${lineIndex}`}
+                              className="grid grid-cols-1 sm:grid-cols-3 gap-2"
+                            >
+                              <Input
+                                type="text"
+                                name={`certDate-${idx}-${lineIndex}`}
+                                placeholder="발급일"
+                                value={line.date}
+                                onChange={(event) =>
+                                  updateDetail(
+                                    jobIndex,
+                                    "certificates",
+                                    lineIndex,
+                                    "date",
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                              <Input
+                                type="text"
+                                name={`certName-${idx}-${lineIndex}`}
+                                placeholder="자격증명"
+                                value={line.name}
+                                onChange={(event) =>
+                                  updateDetail(
+                                    jobIndex,
+                                    "certificates",
+                                    lineIndex,
+                                    "name",
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                              <Input
+                                type="text"
+                                name={`certIssuer-${idx}-${lineIndex}`}
+                                placeholder="발급기관"
+                                value={line.issuer}
+                                onChange={(event) =>
+                                  updateDetail(
+                                    jobIndex,
+                                    "certificates",
+                                    lineIndex,
+                                    "issuer",
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-3 w-full sm:w-28">
+                          <FormButton
+                            type="button"
+                            loading={false}
+                            disabled={false}
+                            text="라인추가"
+                            onClick={() =>
+                              addDetailLine(jobIndex, "certificates")
                             }
                           />
                         </div>
-                      ))}
-                    </div>
-                    <div className="mt-3 w-full sm:w-28">
-                      <FormButton
-                        type="button"
-                        loading={false}
-                        disabled={false}
-                        text="라인추가"
-                        onClick={() => addDetailLine(jobIndex, "certificates")}
-                      />
-                    </div>
-                  </div>
+                      </div>
 
-                  <div className="bg-[#eef2ff] border border-[#d9e1ff] rounded-md px-4 py-3">
-                    <p className="font-bold text-sm">수상경력</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      <span className="text-red-500">수상일(ex. 2002.02.03)</span>, 수상명, 수상기관을 적어주세요.
-                    </p>
-                    <div className="mt-3 space-y-3">
-                      {details.awards.map((line, lineIndex) => (
-                        <div
-                          key={`award-${lineIndex}`}
-                          className="grid grid-cols-1 sm:grid-cols-3 gap-2"
-                        >
-                          <Input
-                            type="text"
-                            name={`awardDate-${idx}-${lineIndex}`}
-                            placeholder="수상일"
-                            value={line.date}
-                            onChange={(event) =>
-                              updateDetail(
-                                jobIndex,
-                                "awards",
-                                lineIndex,
-                                "date",
-                                event.target.value,
-                              )
-                            }
-                          />
-                          <Input
-                            type="text"
-                            name={`awardTitle-${idx}-${lineIndex}`}
-                            placeholder="수상명"
-                            value={line.title}
-                            onChange={(event) =>
-                              updateDetail(
-                                jobIndex,
-                                "awards",
-                                lineIndex,
-                                "title",
-                                event.target.value,
-                              )
-                            }
-                          />
-                          <Input
-                            type="text"
-                            name={`awardOrg-${idx}-${lineIndex}`}
-                            placeholder="수상기관"
-                            value={line.organization}
-                            onChange={(event) =>
-                              updateDetail(
-                                jobIndex,
-                                "awards",
-                                lineIndex,
-                                "organization",
-                                event.target.value,
-                              )
-                            }
+                      <div className="bg-[#eef2ff] border border-[#d9e1ff] rounded-md px-4 py-3">
+                        <p className="font-bold text-sm">수상경력</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          <span className="text-red-500">
+                            수상일(ex. 2002.02.03)
+                          </span>
+                          , 수상명, 수상기관을 적어주세요.
+                        </p>
+                        <div className="mt-3 space-y-3">
+                          {details.awards.map((line, lineIndex) => (
+                            <div
+                              key={`award-${lineIndex}`}
+                              className="grid grid-cols-1 sm:grid-cols-3 gap-2"
+                            >
+                              <Input
+                                type="text"
+                                name={`awardDate-${idx}-${lineIndex}`}
+                                placeholder="수상일"
+                                value={line.date}
+                                onChange={(event) =>
+                                  updateDetail(
+                                    jobIndex,
+                                    "awards",
+                                    lineIndex,
+                                    "date",
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                              <Input
+                                type="text"
+                                name={`awardTitle-${idx}-${lineIndex}`}
+                                placeholder="수상명"
+                                value={line.title}
+                                onChange={(event) =>
+                                  updateDetail(
+                                    jobIndex,
+                                    "awards",
+                                    lineIndex,
+                                    "title",
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                              <Input
+                                type="text"
+                                name={`awardOrg-${idx}-${lineIndex}`}
+                                placeholder="수상기관"
+                                value={line.organization}
+                                onChange={(event) =>
+                                  updateDetail(
+                                    jobIndex,
+                                    "awards",
+                                    lineIndex,
+                                    "organization",
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-3 w-full sm:w-28">
+                          <FormButton
+                            type="button"
+                            loading={false}
+                            disabled={false}
+                            text="라인추가"
+                            onClick={() => addDetailLine(jobIndex, "awards")}
                           />
                         </div>
-                      ))}
-                    </div>
-                    <div className="mt-3 w-full sm:w-28">
-                      <FormButton
-                        type="button"
-                        loading={false}
-                        disabled={false}
-                        text="라인추가"
-                        onClick={() => addDetailLine(jobIndex, "awards")}
-                      />
-                    </div>
-                  </div>
+                      </div>
 
-                  <div className="bg-[#eef2ff] border border-[#d9e1ff] rounded-md px-4 py-3">
-                    <p className="font-bold text-sm">강의경력</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      <span className="text-red-500">강의기간(ex. 30일)</span>, 강의명, 기관을 적어주세요.
-                    </p>
-                    <div className="mt-3 space-y-3">
-                      {details.lectures.map((line, lineIndex) => (
-                        <div
-                          key={`lecture-${lineIndex}`}
-                          className="grid grid-cols-1 sm:grid-cols-3 gap-2"
-                        >
-                          <Input
-                            type="text"
-                            name={`lecturePeriod-${idx}-${lineIndex}`}
-                            placeholder="강의기간"
-                            value={line.period}
-                            onChange={(event) =>
-                              updateDetail(
-                                jobIndex,
-                                "lectures",
-                                lineIndex,
-                                "period",
-                                event.target.value,
-                              )
-                            }
-                          />
-                          <Input
-                            type="text"
-                            name={`lectureTitle-${idx}-${lineIndex}`}
-                            placeholder="강의명"
-                            value={line.title}
-                            onChange={(event) =>
-                              updateDetail(
-                                jobIndex,
-                                "lectures",
-                                lineIndex,
-                                "title",
-                                event.target.value,
-                              )
-                            }
-                          />
-                          <Input
-                            type="text"
-                            name={`lectureOrg-${idx}-${lineIndex}`}
-                            placeholder="기관"
-                            value={line.organization}
-                            onChange={(event) =>
-                              updateDetail(
-                                jobIndex,
-                                "lectures",
-                                lineIndex,
-                                "organization",
-                                event.target.value,
-                              )
-                            }
+                      <div className="bg-[#eef2ff] border border-[#d9e1ff] rounded-md px-4 py-3">
+                        <p className="font-bold text-sm">강의경력</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          <span className="text-red-500">
+                            강의기간(ex. 30일)
+                          </span>
+                          , 강의명, 기관을 적어주세요.
+                        </p>
+                        <div className="mt-3 space-y-3">
+                          {details.lectures.map((line, lineIndex) => (
+                            <div
+                              key={`lecture-${lineIndex}`}
+                              className="grid grid-cols-1 sm:grid-cols-3 gap-2"
+                            >
+                              <Input
+                                type="text"
+                                name={`lecturePeriod-${idx}-${lineIndex}`}
+                                placeholder="강의기간"
+                                value={line.period}
+                                onChange={(event) =>
+                                  updateDetail(
+                                    jobIndex,
+                                    "lectures",
+                                    lineIndex,
+                                    "period",
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                              <Input
+                                type="text"
+                                name={`lectureTitle-${idx}-${lineIndex}`}
+                                placeholder="강의명"
+                                value={line.title}
+                                onChange={(event) =>
+                                  updateDetail(
+                                    jobIndex,
+                                    "lectures",
+                                    lineIndex,
+                                    "title",
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                              <Input
+                                type="text"
+                                name={`lectureOrg-${idx}-${lineIndex}`}
+                                placeholder="기관"
+                                value={line.organization}
+                                onChange={(event) =>
+                                  updateDetail(
+                                    jobIndex,
+                                    "lectures",
+                                    lineIndex,
+                                    "organization",
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-3 w-full sm:w-28">
+                          <FormButton
+                            type="button"
+                            loading={false}
+                            disabled={false}
+                            text="라인추가"
+                            onClick={() => addDetailLine(jobIndex, "lectures")}
                           />
                         </div>
-                      ))}
+                      </div>
                     </div>
-                    <div className="mt-3 w-full sm:w-28">
-                      <FormButton
-                        type="button"
-                        loading={false}
-                        disabled={false}
-                        text="라인추가"
-                        onClick={() => addDetailLine(jobIndex, "lectures")}
-                      />
-                    </div>
-                  </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )})}
+              );
+            })}
           </div>
 
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
-          <div className="w-full sm:w-32">
-            <FormButton
-              type="button"
-              loading={false}
-              disabled={false}
-              text="임시저장"
-              onClick={handleTempSave}
-            />
-          </div>
-          <div className="w-full sm:w-32">
-            <FormButton
-              type="submit"
-              loading={false}
-              disabled={false}
-              text="회원가입"
-            />
-          </div>
+            <div className="w-full sm:w-32">
+              <FormButton
+                type="button"
+                loading={false}
+                disabled={false}
+                text="임시저장"
+                onClick={handleTempSave}
+              />
+            </div>
+            <div className="w-full sm:w-32">
+              <FormButton
+                type="submit"
+                loading={false}
+                disabled={false}
+                text="회원가입"
+              />
+            </div>
           </div>
         </form>
       </main>

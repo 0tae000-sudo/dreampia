@@ -64,7 +64,6 @@ export async function GET(request: NextRequest) {
       { headers: getCorsHeaders(request.headers.get("origin")) },
     );
   } catch (error) {
-    console.error("profile API error", error);
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },
       { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },

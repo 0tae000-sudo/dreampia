@@ -14,7 +14,7 @@ export async function OPTIONS(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  try{
+  try {
     const session = await getSession();
     if (!session.id) {
       return NextResponse.json(
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         { status: 401, headers: getCorsHeaders(request.headers.get("origin")) },
       );
     }
-  
+
     if (session.rememberMe) {
       session.updateConfig({
         ...sessionOptions,
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       });
       await session.save();
     }
-  
+
     const user = await db.user.findUnique({
       where: { id: session.id },
       select: {
@@ -46,25 +46,22 @@ export async function GET(request: NextRequest) {
         isMentor: true,
       },
     });
-  
+
     if (!user) {
       return NextResponse.json(
         { success: false, error: "사용자를 찾을 수 없습니다." },
         { status: 404, headers: getCorsHeaders(request.headers.get("origin")) },
       );
     }
-  
+
     return NextResponse.json(
       { success: true, data: user },
       { headers: getCorsHeaders(request.headers.get("origin")) },
     );
-
-  }catch (error) {
-    console.log("error", error);
+  } catch (error) {
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },
       { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
     );
   }
 }
-

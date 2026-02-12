@@ -49,10 +49,9 @@ const formSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  console.log("GET Request received");
   return NextResponse.json(
     { ok: true },
-    { headers: getCorsHeaders(request.headers.get("origin")) } // 헤더 추가
+    { headers: getCorsHeaders(request.headers.get("origin")) }, // 헤더 추가
   );
 }
 
@@ -64,7 +63,7 @@ export async function POST(request: NextRequest) {
       const flattenedError = z.flattenError(result.error);
       return NextResponse.json(
         { success: false, error: flattenedError.fieldErrors },
-        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
       );
     }
     const user = await db.user.findUnique({
@@ -80,7 +79,7 @@ export async function POST(request: NextRequest) {
     if (!user || !isPasswordValid) {
       return NextResponse.json(
         { success: false, error: "이메일 또는 비밀번호가 올바르지 않습니다." },
-        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
       );
     }
     const session = await getSession();
@@ -105,10 +104,9 @@ export async function POST(request: NextRequest) {
       });
     }
     await session.save();
-    console.log("session", session);
     const response = NextResponse.json(
       { success: true, data: user.id },
-      { headers: getCorsHeaders(request.headers.get("origin")) } // 헤더 추가
+      { headers: getCorsHeaders(request.headers.get("origin")) }, // 헤더 추가
     );
     response.cookies.set("dreampia_session", "1", {
       path: "/",
@@ -118,10 +116,9 @@ export async function POST(request: NextRequest) {
     });
     return response;
   } catch (error) {
-    console.log("error", error);
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },
-      { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
+      { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
     );
   }
 }

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/api";
 
-const PROTECTED_PATHS = ["/profile"]; // 보호 경로 설정
+const PROTECTED_PATHS = ["/profile", "/admin"]; // 보호 경로 설정
 const PUBLIC_ONLY_PATHS = ["/auth/login", "/auth/signup", "/create-account"];
 
 export default function RouteGuard() {

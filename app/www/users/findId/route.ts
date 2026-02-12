@@ -71,10 +71,9 @@ const requestSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  console.log("GET Request received");
   return NextResponse.json(
     { ok: true },
-    { headers: getCorsHeaders(request.headers.get("origin")) } // 헤더 추가
+    { headers: getCorsHeaders(request.headers.get("origin")) }, // 헤더 추가
   );
 }
 
@@ -90,7 +89,7 @@ export async function POST(request: NextRequest) {
           message: "입력값을 확인해주세요.",
           error: flattenedError.fieldErrors,
         },
-        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
       );
     }
     const { name, phone1, phone2, phone3, token } = parsed.data;
@@ -107,7 +106,7 @@ export async function POST(request: NextRequest) {
           message: "인증번호가 만료되었거나 유효하지 않습니다.",
           error: { token: ["인증번호가 만료되었거나 유효하지 않습니다."] },
         },
-        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
       );
     }
     if (record.token !== token) {
@@ -117,7 +116,7 @@ export async function POST(request: NextRequest) {
           message: "인증번호가 올바르지 않습니다.",
           error: { token: ["인증번호가 올바르지 않습니다."] },
         },
-        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
+        { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
       );
     }
 
@@ -134,17 +133,17 @@ export async function POST(request: NextRequest) {
           message: "일치하는 회원이 없습니다.",
           error: { name: ["일치하는 회원이 없습니다."] },
         },
-        { status: 404, headers: getCorsHeaders(request.headers.get("origin")) }
+        { status: 404, headers: getCorsHeaders(request.headers.get("origin")) },
       );
     }
     return NextResponse.json(
       { success: true, data: { email: user.email } },
-      { headers: getCorsHeaders(request.headers.get("origin")) } // 헤더 추가
+      { headers: getCorsHeaders(request.headers.get("origin")) }, // 헤더 추가
     );
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },
-      { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
+      { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
     );
   }
 }

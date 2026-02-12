@@ -198,7 +198,6 @@ export const verifyPhone = async (userData: Record<string, string>) => {
     method: "POST",
     body: JSON.stringify(userData),
   });
-  console.log(response);
 
   const payload = await response.json().catch(() => null);
   if (!response.ok) {

@@ -9,7 +9,7 @@ import { findId, resetPassword, verifyPhone } from "@/lib/auth/api";
 import { ApiError } from "@/lib/api-utils";
 import { useToast } from "@/components/toast-provider";
 import { PASSWORD_MIN_LENGTH, PASSWORD_REGEX_ERROR } from "@/lib/constants";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 
 export default function FindMy() {
   const router = useRouter();
@@ -134,7 +134,8 @@ export default function FindMy() {
     onSuccess: (_, variables) => {
       setFieldErrors({});
       const tokenValue = String(variables?.token ?? "").trim();
-      if (tokenValue) { // 서버에서 토큰을 받아온 경우(인증이 완료된 경우)
+      if (tokenValue) {
+        // 서버에서 토큰을 받아온 경우(인증이 완료된 경우)
         setPasswordVerified(true);
         setVerifiedToken(tokenValue);
         showToast("인증되었습니다.", "success");
@@ -147,7 +148,6 @@ export default function FindMy() {
       showToast("인증번호가 발송되었습니다.", "success");
     },
     onError: (error, _, context) => {
-      console.log(error.message);
       if (context?.prevState) {
         queryClient.setQueryData(["verifyPhone"], context.prevState);
       }
@@ -162,9 +162,10 @@ export default function FindMy() {
       setFieldErrors({});
       showToast(error.message || "인증번호 발송에 실패했습니다.", "error");
     },
-    onSettled: () => { // 캐시 무효화, 서버값으로 동기화
+    onSettled: () => {
+      // 캐시 무효화, 서버값으로 동기화
       queryClient.invalidateQueries({ queryKey: ["verifyPhone"] });
-       // verifyPhone 캐시 무효화, 이후 요청시 서버에서 값을 다시 받아옴
+      // verifyPhone 캐시 무효화, 이후 요청시 서버에서 값을 다시 받아옴
     },
   });
 

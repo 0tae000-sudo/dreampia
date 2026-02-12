@@ -28,6 +28,7 @@ model User {
   position       String?
   isTeacher      Boolean?
   isMentor       Boolean?
+  isAdmin        Boolean?
   postcode       String?
   address        String?
   detailAddress  String?
@@ -228,4 +229,16 @@ enum StudentChangeType {
   CHANGE_PER_PERIOD
   NO_CHANGE
 }
+
+model Notice {
+  id        Int      @id @default(autoincrement())
+  title     String   // 제목
+  content   String   // 본문
+  author    String   // 작성자 (예: 마스)
+  category  String?  // 카테고리 (예: 교사, 일반)
+  views     Int      @default(0) // 조회수
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
 

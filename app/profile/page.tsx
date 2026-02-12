@@ -31,7 +31,6 @@ export default function ProfileHomePage() {
         const payload = await getProfileUser();
         if (isMounted) {
           setProfile(payload.data as ProfileUser);
-          console.log(payload.data);
         }
       } catch {
         if (isMounted) {

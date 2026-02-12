@@ -142,10 +142,8 @@ const schema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  console.log("POST Request received");
   try {
     const data = await request.json();
-    console.log(data);
     const result = schema.safeParse(data);
     if (!result.success) {
       const flattenedError = z.flattenError(result.error);

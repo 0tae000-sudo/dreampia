@@ -32,8 +32,6 @@ export default function Login() {
       router.refresh();
     },
     onError: (error) => {
-      console.log("로그인 에러", error);
-      console.log("필드에러", error.fieldErrors);
       if (error.fieldErrors) {
         setFieldErrors(error.fieldErrors);
         setFormError(null);
