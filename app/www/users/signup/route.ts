@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
   console.log("GET Request received");
   return NextResponse.json(
     { ok: true },
-    { headers: getCorsHeaders(request.headers.get("origin")) } // 헤더 추가
+    { headers: getCorsHeaders(request.headers.get("origin")) }, // 헤더 추가
   );
 }
 
@@ -126,7 +126,11 @@ const withCommonRefinements = <T extends z.ZodTypeAny>(schema: T) =>
       }
     })
     .superRefine(async (data, ctx) => {
-      const { phone1, phone2, phone3 } = data as { phone1?: string, phone2?: string, phone3?: string };
+      const { phone1, phone2, phone3 } = data as {
+        phone1?: string;
+        phone2?: string;
+        phone3?: string;
+      };
       const phone = `${phone1 ?? ""}${phone2 ?? ""}${phone3 ?? ""}`;
       if (phone1 && phone2 && phone3 && !(await checkUniquePhone(phone))) {
         ctx.addIssue({
@@ -222,7 +226,9 @@ const mentorSchema = withCommonRefinements(
     name: z
       .string({
         error: (issue) =>
-          issue.input === undefined ? "이름은 필수 입력 항목입니다." : undefined,
+          issue.input === undefined
+            ? "이름은 필수 입력 항목입니다."
+            : undefined,
       })
       .trim()
       .min(1, { message: "이름은 필수 입력 항목입니다." }),
@@ -247,7 +253,9 @@ const mentorSchema = withCommonRefinements(
     major: z
       .string({
         error: (issue) =>
-          issue.input === undefined ? "전공은 필수 입력 항목입니다." : undefined,
+          issue.input === undefined
+            ? "전공은 필수 입력 항목입니다."
+            : undefined,
       })
       .trim()
       .min(1, { message: "전공은 필수 입력 항목입니다." }),
@@ -276,7 +284,10 @@ const sanitizeLines = <T extends Record<string, unknown>>(
   return lines
     .map((line) => {
       const cleaned = Object.fromEntries(
-        Object.entries(line).map(([key, value]) => [key, toNullableString(value)]),
+        Object.entries(line).map(([key, value]) => [
+          key,
+          toNullableString(value),
+        ]),
       );
       return cleaned as Record<string, string | null>;
     })
@@ -330,7 +341,7 @@ export async function POST(request: NextRequest) {
         },
         {},
       );
-      console.log(fieldErrors);
+
       return NextResponse.json(
         { success: false, error: fieldErrors },
         { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
@@ -357,7 +368,10 @@ export async function POST(request: NextRequest) {
             success: false,
             error: { agreements: ["필수 약관에 동의해주세요."] },
           },
-          { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
+          {
+            status: 400,
+            headers: getCorsHeaders(request.headers.get("origin")),
+          },
         );
       }
       const hashedPassword = await bcrypt.hash(data.password, 12);
@@ -378,6 +392,10 @@ export async function POST(request: NextRequest) {
           password: hashedPassword,
           name: isTeacherSignup ? data.teacherName : data.name,
           phone,
+          address: isTeacherSignup ? data.address : undefined,
+          postcode: isTeacherSignup ? data.postcode : undefined,
+          detailAddress: isTeacherSignup ? data.detailAddress : undefined,
+          position: isTeacherSignup ? data.position : undefined,
           howcome: isTeacherSignup ? undefined : data.howcome,
           graduationYear: isTeacherSignup ? undefined : data.graduationYear,
           schoolName: data.schoolName,
@@ -441,14 +459,14 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json(
         { success: true, data: user.id },
-        { headers: getCorsHeaders(request.headers.get("origin")) } // 헤더 추가
+        { headers: getCorsHeaders(request.headers.get("origin")) }, // 헤더 추가
       );
     }
   } catch (error) {
     console.log(error);
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },
-      { status: 400, headers: getCorsHeaders(request.headers.get("origin")) }
+      { status: 400, headers: getCorsHeaders(request.headers.get("origin")) },
     );
   }
 }

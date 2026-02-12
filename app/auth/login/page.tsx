@@ -108,12 +108,14 @@ export default function Login() {
               errors={fieldErrors.password}
               minLength={PASSWORD_MIN_LENGTH}
             />
-            <label className="flex items-center gap-2 text-sm text-gray-600">
+            <label
+              className={`flex items-center gap-2 text-sm text-gray-600 ${fieldErrors.password ? "mt-[30px]" : ""}`}
+            >
               <input
                 name="rememberMe"
                 type="checkbox"
                 className="accent-[#e35b2f]"
-              />{" "}
+              />
               자동로그인
             </label>
             <span className="cursor-pointer">

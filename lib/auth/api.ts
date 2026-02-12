@@ -13,8 +13,9 @@ const getApiBaseUrl = () => {
   }
   if (API_BASE_URL) return API_BASE_URL;
   if (Capacitor.isNativePlatform()) {
-    const serverUrl = (Capacitor as { getServerUrl?: () => string })
-      .getServerUrl?.();
+    const serverUrl = (
+      Capacitor as { getServerUrl?: () => string }
+    ).getServerUrl?.();
     if (serverUrl) return serverUrl;
     const platform = Capacitor.getPlatform();
     if (platform === "android") return "http://10.0.2.2:3000";
@@ -68,9 +69,9 @@ export const loginUser = async (userData: {
       errorPayload && typeof errorPayload === "object"
         ? (errorPayload as Record<string, string[]>)
         : typeof errorPayload === "string" &&
-          errorPayload === "이메일 또는 비밀번호가 올바르지 않습니다."
-        ? { password: [errorPayload] }
-        : undefined;
+            errorPayload === "이메일 또는 비밀번호가 올바르지 않습니다."
+          ? { password: [errorPayload] }
+          : undefined;
     throw { message, fieldErrors } satisfies ApiError;
   }
   setClientSessionFlag();
@@ -82,6 +83,25 @@ export const getCurrentUser = async () => {
     throw { message: "로그인이 필요합니다." } satisfies ApiError;
   }
   const response = await fetch(buildApiUrl("/www/users/me/"), {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    clearClientSessionFlag();
+    const message = payload?.error ?? "로그인이 필요합니다.";
+    throw { message } satisfies ApiError;
+  }
+
+  return payload;
+};
+
+export const getProfileUser = async () => {
+  if (!hasClientSessionFlag()) {
+    throw { message: "로그인이 필요합니다." } satisfies ApiError;
+  }
+  const response = await fetch(buildApiUrl("/www/users/me/profile/"), {
     method: "GET",
     credentials: "include",
   });
@@ -178,7 +198,7 @@ export const verifyPhone = async (userData: Record<string, string>) => {
     method: "POST",
     body: JSON.stringify(userData),
   });
-  console.log(response)
+  console.log(response);
 
   const payload = await response.json().catch(() => null);
   if (!response.ok) {

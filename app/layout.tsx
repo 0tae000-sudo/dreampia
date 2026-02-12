@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import QueryProvider from "@/components/QueryProvider";
 import RouteGuard from "@/components/route-guard";
 import ToastProvider from "@/components/toast-provider";
+import { LogIn, LogOut, User, UserPlus } from "lucide-react";
 
 // 모바일 기기 노치 및 상태바 대응을 위한 필수 설정
 export const viewport: Viewport = {
@@ -14,7 +15,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "MARS",
+  title: {
+    template: "%s | MARS",
+    default: "MARS",
+  },
   description: "MARS",
 };
 
@@ -56,23 +60,30 @@ export default async function RootLayout({
                     href="/auth/login"
                     className="flex items-center hover:text-blue-600"
                   >
-                    로그인
+                    <LogIn size={18} /> <span className="ml-2">로그인</span>
                   </Link>
                   <Link
                     href="/auth/signup"
                     className="flex items-center text-red-500 hover:text-red-700"
                   >
-                    회원가입
+                    <UserPlus size={18} />{" "}
+                    <span className="ml-2">회원가입</span>
                   </Link>
                 </div>
               )}
               {isLoggedIn && (
                 <div className="flex space-x-4 text-sm font-bold text-gray-700">
                   <Link
-                    href="/auth/logout"
-                    className="flex items-center hover:text-blue-600"
+                    href="/profile"
+                    className="flex items-center hover:text-blue-600 text-gray-700"
                   >
-                    로그아웃
+                    <User size={18} /> <span className="ml-2">마이페이지</span>
+                  </Link>
+                  <Link
+                    href="/auth/logout"
+                    className="flex items-center hover:text-blue-600 text-gray-700"
+                  >
+                    <LogOut size={18} /> <span className="ml-2">로그아웃</span>
                   </Link>
                 </div>
               )}

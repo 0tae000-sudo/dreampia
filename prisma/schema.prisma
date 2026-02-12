@@ -25,8 +25,12 @@ model User {
   major          String?
   introduction   String?
   role           String?
+  position       String?
   isTeacher      Boolean?
   isMentor       Boolean?
+  postcode       String?
+  address        String?
+  detailAddress  String?
   created_at     DateTime   @default(now())
   updated_at     DateTime   @updatedAt
   SMSToken       SMSToken[]
