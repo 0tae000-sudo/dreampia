@@ -16,7 +16,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "seed:agreements": "tsx scripts/seed-agreements.ts",
-    "seed:jobs": "tsx scripts/seed-jobs.ts"
+    "seed:jobs": "tsx scripts/seed-jobs.ts",
+    "seed:notices": "tsx scripts/seed-notices.ts"
   },
   "dependencies": {
     "@capacitor-firebase/messaging": "6.3.1",

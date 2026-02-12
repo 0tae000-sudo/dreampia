@@ -24,6 +24,8 @@ export async function OPTIONS(request: NextRequest) {
   );
 }
 
+const DEFAULT_LIMIT = 15;
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
@@ -46,12 +48,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const notices = await db.notice.findMany({
-      orderBy: { created_at: "desc" },
-    });
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10)));
+    const skip = (page - 1) * limit;
+
+    const [notices, total] = await Promise.all([
+      db.notice.findMany({
+        orderBy: { created_at: "desc" },
+        skip,
+        take: limit,
+      }),
+      db.notice.count(),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json(
-      { success: true, data: notices },
+      { success: true, data: notices, total, totalPages, page, limit },
       { headers: getCorsHeaders(request.headers.get("origin")) },
     );
   } catch (error) {

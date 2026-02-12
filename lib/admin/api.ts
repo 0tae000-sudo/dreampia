@@ -44,8 +44,24 @@ export type CreateNoticePayload = {
   category?: string;
 };
 
-export const getNotices = async (): Promise<{ success: true; data: Notice[] }> => {
-  const response = await fetch(buildApiUrl("/www/admin/notices"), {
+export type GetNoticesResult = {
+  success: true;
+  data: Notice[];
+  total: number;
+  totalPages: number;
+  page: number;
+  limit: number;
+};
+
+export const getNotices = async (
+  page = 1,
+  limit = 15,
+): Promise<GetNoticesResult> => {
+  const url = new URL(buildApiUrl("/www/admin/notices"));
+  url.searchParams.set("page", String(page));
+  url.searchParams.set("limit", String(limit));
+
+  const response = await fetch(url.toString(), {
     method: "GET",
     credentials: "include",
   });

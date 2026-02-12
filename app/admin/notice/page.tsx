@@ -3,19 +3,30 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getNotices, type Notice } from "@/lib/admin/api";
-import { Pencil, Plus } from "lucide-react";
+import { Pencil, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+
+const PAGE_SIZE = 15;
 
 export default function AdminNoticePage() {
   const [notices, setNotices] = useState<Notice[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     const fetchNotices = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
-        const res = await getNotices();
-        if (isMounted) setNotices(res.data);
+        const res = await getNotices(page, PAGE_SIZE);
+        if (isMounted) {
+          setNotices(res.data);
+          setTotal(res.total);
+          setTotalPages(res.totalPages);
+        }
       } catch (e) {
         if (isMounted) {
           setError(
@@ -32,10 +43,22 @@ export default function AdminNoticePage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [page]);
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toISOString().slice(0, 10);
+  };
+
+  const startNo = total - (page - 1) * PAGE_SIZE;
+
+  const getPageNumbers = () => {
+    const maxVisible = 5;
+    let start = Math.max(1, page - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   };
 
   return (
@@ -119,7 +142,7 @@ export default function AdminNoticePage() {
                       className="transition-colors hover:bg-gray-50"
                     >
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                        {notices.length - index}
+                        {startNo - index}
                       </td>
                       <td className="px-4 py-3">
                         <span className="line-clamp-2 font-medium text-gray-900">
@@ -155,14 +178,45 @@ export default function AdminNoticePage() {
           </div>
         </div>
 
-        {/* 페이지네이션 placeholder */}
-        {!isLoading && notices.length > 0 && (
-          <div className="mt-4 flex justify-center">
+        {/* 페이지네이션 */}
+        {!isLoading && totalPages > 0 && (
+          <div className="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+            <p className="text-sm text-gray-500">
+              전체 {total}건 ({page}/{totalPages}페이지)
+            </p>
             <nav className="flex items-center gap-1">
-              <span className="rounded border border-[#1e4a85] bg-[#1e4a85] px-3 py-1.5 text-sm font-medium text-white">
-                1
-              </span>
-              {/* 차후 페이지 추가 시 확장 */}
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                className="rounded border border-gray-300 p-2 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-transparent"
+                aria-label="이전 페이지"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              {getPageNumbers().map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPage(p)}
+                  className={`min-w-9 rounded px-2 py-1.5 text-sm font-medium ${
+                    p === page
+                      ? "border border-[#1e4a85] bg-[#1e4a85] text-white"
+                      : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className="rounded border border-gray-300 p-2 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-transparent"
+                aria-label="다음 페이지"
+              >
+                <ChevronRight size={18} />
+              </button>
             </nav>
           </div>
         )}
