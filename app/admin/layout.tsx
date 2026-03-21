@@ -23,5 +23,9 @@ export default async function AdminLayout({
     redirect("/");
   }
 
-  return <>{children}</>;
+  return (
+    <html lang="ko">
+      <body>{children}</body>
+    </html>
+  );
 }

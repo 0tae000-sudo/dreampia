@@ -46,7 +46,7 @@
 // }
 
 import { Metadata } from "next";
-import MarsLayout from "../../components/mars_layout";
+import MarsLayout from "../../../components/mars_layout";
 
 export const metadata: Metadata = {
   title: "MARS",
@@ -54,8 +54,6 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-
-
   return (
     <div>
       <MarsLayout />
