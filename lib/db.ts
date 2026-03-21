@@ -11,5 +11,4 @@ if (!databaseUrl) {
 const adapter = new PrismaBetterSqlite3({ url: databaseUrl });
 const db = new PrismaClient({ adapter });
 
-
 export default db;
