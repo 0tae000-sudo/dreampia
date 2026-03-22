@@ -1,26 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Input from "@/components/input";
+import {
+  RichTextEditor,
+  type RichTextEditorHandle,
+} from "@/components/admin/rich-text-editor";
 import { createNotice } from "@/lib/admin/api";
 import { useToast } from "@/components/toast-provider";
+import { isHtmlContentEmpty } from "@/lib/admin/notice-html";
+
+const EMPTY_DOC = "<p></p>";
 
 export default function AdminNoticeNewPage() {
   const router = useRouter();
   const { showToast } = useToast();
+  const contentRef = useRef<RichTextEditorHandle>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFieldErrors({});
+    const content = (contentRef.current?.getHtml() ?? "").trim();
+    if (isHtmlContentEmpty(content)) {
+      setFieldErrors({ content: ["본문을 입력해 주세요."] });
+      return;
+    }
+
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
     const payload = {
       title: String(formData.get("title") ?? "").trim(),
-      content: String(formData.get("content") ?? "").trim(),
+      content,
       author: String(formData.get("author") ?? "").trim(),
       category: String(formData.get("category") ?? "").trim() || undefined,
     };
@@ -44,7 +58,6 @@ export default function AdminNoticeNewPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-4xl px-4 py-10">
-        {/* 헤더 */}
         <div className="mb-6">
           <Link
             href="/admin/notice"
@@ -60,7 +73,6 @@ export default function AdminNoticeNewPage() {
           </p>
         </div>
 
-        {/* 폼 */}
         <form
           onSubmit={handleSubmit}
           className="space-y-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:p-8"
@@ -111,15 +123,20 @@ export default function AdminNoticeNewPage() {
             <label className="mb-2 block text-sm font-medium text-gray-700">
               본문 <span className="text-red-500">*</span>
             </label>
+            <p className="mb-2 text-xs text-gray-500">
+              Editor / HTML / TEXT 탭으로 편집 방식을 바꿀 수 있습니다.
+            </p>
             {fieldErrors.content && (
               <p className="mb-2 text-sm text-red-500">{fieldErrors.content[0]}</p>
             )}
-            <textarea
-              name="content"
-              required
-              rows={12}
-              placeholder="공지사항 내용을 입력하세요"
-              className="w-full rounded-md border border-gray-200 px-3 py-2 text-base placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#1e4a85]/40"
+            <RichTextEditor
+              ref={contentRef}
+              key="new"
+              initialHtml={EMPTY_DOC}
+              embedded
+              defaultHeight={380}
+              placeholder="공지사항 내용을 입력하세요…"
+              showResizeHint
             />
           </div>
 
