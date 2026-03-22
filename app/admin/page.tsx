@@ -80,10 +80,7 @@ export default async function AdminPage() {
           <tbody>
             {eventRequests.length === 0 ? (
               <tr>
-                <td
-                  colSpan={5}
-                  className="px-3 py-8 text-center text-gray-500"
-                >
+                <td colSpan={5} className="px-3 py-8 text-center text-gray-500">
                   등록된 행사 요청이 없습니다.
                 </td>
               </tr>
@@ -160,7 +157,7 @@ export default async function AdminPage() {
       </SectionCard>
 
       {/* 3. 멘토 가입 */}
-      <SectionCard title="멘토 가입">
+      <SectionCard title="멘토 가입 및 수정 요청">
         <table className="mt-4 w-full min-w-[560px] border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-gray-700">
@@ -183,7 +180,7 @@ export default async function AdminPage() {
                 <td className="px-3 py-3 text-gray-700">{row.note}</td>
                 <td className="px-3 py-3 text-center">
                   <Link
-                    href="/admin/mentors"
+                    href={`/admin/mentors/${row.id}`}
                     className="font-medium text-[#4e73df] hover:text-[#224abe] hover:underline"
                   >
                     보기

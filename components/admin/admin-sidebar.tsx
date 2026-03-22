@@ -50,9 +50,7 @@ export function AdminSidebar() {
           관리 메뉴
         </p>
         {menuItems.map(({ href, label, icon: Icon }) => {
-          const active =
-            pathname === href ||
-            (href !== "/admin" && pathname.startsWith(href + "/"));
+          const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link
               key={href}
